@@ -1,0 +1,18 @@
+{
+  "name": "trefoil-bezier",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "start": "budo index.js --css main.css --live"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "bezier-js": "^2.2.15",
+    "bezierjs": "0.0.4",
+    "budo": "^10.0.4",
+    "graphlib": "^2.1.5",
+    "three": "^0.88.0"
+  }
+}
