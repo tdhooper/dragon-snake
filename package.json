@@ -13,6 +13,7 @@
     "bezierjs": "0.0.4",
     "budo": "^10.0.4",
     "graphlib": "^2.1.5",
+    "polyhedra": "^1.0.0",
     "three": "^0.88.0"
   }
 }
