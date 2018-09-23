@@ -386,6 +386,14 @@ scene.add(mesh);
 // var guides = createGuides(10);
 // scene.add(guides[0]);
 
+
+
+
+
+
+
+var ico = new THREE.IcosahedronGeometry(10, 0);
+
 var graph = new graphlib.Graph();
 
 var getFaceEdge = function(face, arrangement) {
@@ -457,6 +465,74 @@ ico.faces.forEach(function(faceA, a) {
   });
 });
 
+
+
+
+
+
+var graph2 = new graphlib.Graph();
+
+var polyhedra = require('polyhedra');
+var poly = polyhedra.platonic.Dodecahedron;
+
+var addEdge = function(a, b) {
+  var vertA = new THREE.Vector3().fromArray(poly.vertex[a]);
+  var vertB = new THREE.Vector3().fromArray(poly.vertex[b]);
+
+  vertA.multiplyScalar(8);
+  vertB.multiplyScalar(8);
+
+  var vec = new THREE.Vector3().lerpVectors(
+    vertA,
+    vertB,
+    0.5
+  );
+  var axis = vec.clone().normalize();
+
+  var tangentIn = new THREE.Vector3()
+    .subVectors(vertA, vec)
+    // .applyAxisAngle(axis, Math.PI * 0.5)
+    .normalize();
+
+  var tangentOut = tangentIn.clone().applyAxisAngle(axis, Math.PI);
+
+  graph2.setEdge(a, b, {
+    vec: vec,
+    tangentOut: tangentOut,
+    tangentIn: tangentIn
+  });
+};
+
+poly.edge.forEach(function(edge) {
+  addEdge(edge[1], edge[0]);
+  addEdge(edge[0], edge[1]);
+});
+
+
+
+
+function sphereHelper(pos) {
+  var g = new THREE.SphereGeometry(.5);
+  var m = new THREE.Mesh(g);
+  m.position.copy(pos);
+  scene.add(m);
+}
+
+
+
+graph = graph2;
+
+// console.log(graph.edges())
+
+// graph.edges().map(function(edge) {
+//   var e = graph.edge(edge);
+//   sphereHelper(e.vec);
+//   scene.add(new THREE.ArrowHelper(e.tangentOut, e.vec, 3));
+// });
+
+
+
+
 // console.log(graph.edges().length);
 // graph.edges().forEach(function(edge) {
 //     console.log(graph.edge(edge));
@@ -497,6 +573,7 @@ var CurveFactory = function(radius) {
 
   var getPlan = function() {
     var nodes = graph.successors(lastNode);
+    // console.log(lastNode, nodes);
     emptyNodes = nodes.filter(function(node) {
       return occupiedFaces.indexOf(node) === -1;
     });
@@ -520,6 +597,11 @@ var CurveFactory = function(radius) {
     var b = edge.vec.clone();
     var ta = lastEdge.tangentOut;
     var tb = edge.tangentIn;
+
+    // sphereHelper(a);
+    // scene.add(new THREE.ArrowHelper(ta, a, 3));
+    // sphereHelper(b);
+    // scene.add(new THREE.ArrowHelper(tb, b, 1.5));
 
     var loop = (
       a.x == b.x &&
