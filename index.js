@@ -169,7 +169,7 @@ NormalEndlessCurve.prototype.getGuidePoint = function(t) {
 
 var createGeometry = function(radialSegments, segments) {
   var height = 10;
-  var size = 1;
+  var size = 1.5;
   var geometry = new THREE.CylinderGeometry(size, size, height, radialSegments, segments, 0);
 
   var curve = new Bezier(
@@ -391,7 +391,7 @@ scene.add(mesh);
 var graph = new graphlib.Graph();
 
 var polyhedra = require('polyhedra');
-var poly = polyhedra.platonic.Dodecahedron;
+var poly = polyhedra.platonic.Icosahedron;
 
 var addEdge = function(a, b) {
   var vertA = new THREE.Vector3().fromArray(poly.vertex[a]);
