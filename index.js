@@ -388,89 +388,7 @@ scene.add(mesh);
 
 
 
-
-
-
-
-var ico = new THREE.IcosahedronGeometry(10, 0);
-
 var graph = new graphlib.Graph();
-
-var getFaceEdge = function(face, arrangement) {
-  return [
-    face[arrangement[0]],
-    face[arrangement[1]]
-  ];
-};
-
-var faceEdgeHash = function(faceEdge) {
-  return faceEdge.slice().sort().join();
-};
-
-var adjacentFaces = function(faceA, faceB) {
-  var arrangements = [
-    ['a', 'b'],
-    ['b', 'c'],
-    ['c', 'a']
-  ]
-  var faceEdge;
-  arrangements.some(function(arrangementA) {
-    var faceEdgeA = getFaceEdge(faceA, arrangementA);
-    return arrangements.some(function(arrangementB) {
-      var faceEdgeB = getFaceEdge(faceB, arrangementB);
-      if (faceEdgeHash(faceEdgeA) == faceEdgeHash(faceEdgeB)) {
-        faceEdge = faceEdgeA;
-        return true;
-      }
-    });
-  });
-  return faceEdge;
-};
-
-var createEdge = function(a, b, faceEdge) {
-  var vertA = ico.vertices[faceEdge[0]];
-  var vertB = ico.vertices[faceEdge[1]];
-  var vec = new THREE.Vector3().lerpVectors(
-    vertA,
-    vertB,
-    0.5
-  )
-  var axis = vec.clone().normalize();
-
-  var tangentIn = new THREE.Vector3()
-    .subVectors(vertA, vec)
-    .applyAxisAngle(axis, Math.PI * -0.5)
-    .normalize();
-
-  var tangentOut = tangentIn.clone().applyAxisAngle(axis, Math.PI)
-
-  graph.setEdge(a, b, {
-    vec: vec,
-    tangentOut: tangentOut,
-    tangentIn: tangentIn
-  });
-};
-
-ico.faces.forEach(function(faceA, a) {
-  var node = graph.setNode(a);
-
-  ico.faces.forEach(function(faceB, b) {
-    if (a == b) {
-      return;
-    }
-    var faceEdge = adjacentFaces(faceA, faceB);
-    if (faceEdge) {
-      createEdge(a, b, faceEdge);
-    }
-  });
-});
-
-
-
-
-
-
-var graph2 = new graphlib.Graph();
 
 var polyhedra = require('polyhedra');
 var poly = polyhedra.platonic.Dodecahedron;
@@ -491,12 +409,11 @@ var addEdge = function(a, b) {
 
   var tangentIn = new THREE.Vector3()
     .subVectors(vertA, vec)
-    // .applyAxisAngle(axis, Math.PI * 0.5)
     .normalize();
 
   var tangentOut = tangentIn.clone().applyAxisAngle(axis, Math.PI);
 
-  graph2.setEdge(a, b, {
+  graph.setEdge(a, b, {
     vec: vec,
     tangentOut: tangentOut,
     tangentIn: tangentIn
@@ -509,34 +426,6 @@ poly.edge.forEach(function(edge) {
 });
 
 
-
-
-function sphereHelper(pos) {
-  var g = new THREE.SphereGeometry(.5);
-  var m = new THREE.Mesh(g);
-  m.position.copy(pos);
-  scene.add(m);
-}
-
-
-
-graph = graph2;
-
-// console.log(graph.edges())
-
-// graph.edges().map(function(edge) {
-//   var e = graph.edge(edge);
-//   sphereHelper(e.vec);
-//   scene.add(new THREE.ArrowHelper(e.tangentOut, e.vec, 3));
-// });
-
-
-
-
-// console.log(graph.edges().length);
-// graph.edges().forEach(function(edge) {
-//     console.log(graph.edge(edge));
-// });
 
 var CurveFactory = function(radius) {
 
@@ -573,7 +462,6 @@ var CurveFactory = function(radius) {
 
   var getPlan = function() {
     var nodes = graph.successors(lastNode);
-    // console.log(lastNode, nodes);
     emptyNodes = nodes.filter(function(node) {
       return occupiedFaces.indexOf(node) === -1;
     });
@@ -597,11 +485,6 @@ var CurveFactory = function(radius) {
     var b = edge.vec.clone();
     var ta = lastEdge.tangentOut;
     var tb = edge.tangentIn;
-
-    // sphereHelper(a);
-    // scene.add(new THREE.ArrowHelper(ta, a, 3));
-    // sphereHelper(b);
-    // scene.add(new THREE.ArrowHelper(tb, b, 1.5));
 
     var loop = (
       a.x == b.x &&
