@@ -7,6 +7,21 @@ var generateStripes = require('./generate-stripes');
 var CurveFactory = require('./curve-factory');
 var NormalEndlessCurve = require('./normal-endless-curve');
 
+
+/* to regl process 
+
+
+1. render a cube
+2. render X instanced cubes
+3. convert curve positions to lookup texture
+4. position cubes from lookup texture
+5. convert curve normal and tangent to lookup texture
+6. orient cubes from normal/tangent texture
+7. offset cubes along rotated normal to form a tight phyllotaxis
+
+*/
+
+
 var width = window.innerWidth;
 var height = window.innerHeight;
 
