@@ -1,7 +1,11 @@
 global.THREE = require('three');
 require('three/examples/js/controls/TrackballControls');
 var Bezier = require('bezier-js');
-var graphlib = require('graphlib');
+var polyhedra = require('polyhedra');
+var createGraph = require('./create-graph');
+var generateStripes = require('./generate-stripes');
+var CurveFactory = require('./curve-factory');
+var NormalEndlessCurve = require('./normal-endless-curve');
 
 var width = window.innerWidth;
 var height = window.innerHeight;
@@ -28,144 +32,7 @@ renderer = new THREE.WebGLRenderer({
   alpha: true
 });
 
-var CustomFragmentMaterial = function(parameters) {
-  THREE.MeshLambertMaterial.call(this);
-  this.type = 'ShaderMaterial';
-  this.setValues(parameters);
-  this.uniforms = THREE.UniformsUtils.clone(THREE.ShaderLib.lambert.uniforms);
-  this.fragmentShader = parameters.fragmentShader
-  this.vertexShader = THREE.ShaderLib.lambert.vertexShader;
-}
-CustomFragmentMaterial.prototype = Object.create(THREE.MeshLambertMaterial.prototype);
-CustomFragmentMaterial.prototype.constructor = CustomFragmentMaterial;
 
-var EndlessCurve = function(nextCurve) {
-  this.distanceOffset = 0;
-  this.nextCurve = nextCurve;
-  THREE.CurvePath.call(this);
-};
-
-EndlessCurve.prototype = Object.create(THREE.CurvePath.prototype);
-EndlessCurve.prototype.constructor = EndlessCurve;
-
-EndlessCurve.prototype.localDistance = function(globalDistance) {
-  return globalDistance - this.distanceOffset;
-};
-
-EndlessCurve.prototype.getLtoUmapping = function(l) {
-  var len = this.getLengthSafe();
-  return l / len;
-};
-
-EndlessCurve.prototype.getPointAtLength = function(position) {
-  var p = this.localDistance(position);
-
-  var len = this.getLengthSafe();
-
-  if (p < len) {
-    var u = this.getLtoUmapping(p);
-    var point = this.getPointAt(u);
-    return point;
-  }
-
-  var newCurve = this.nextCurve();
-  this.add(newCurve);
-
-  return this.getPointAtLength(position);
-};
-
-EndlessCurve.prototype.getTangentAtLength = function(position) {
-  var p = this.localDistance(position);
-  var len = this.getLengthSafe();
-  var t = p / len;
-  var tangent = this.getTangentAt(t);
-  return tangent;
-};
-
-EndlessCurve.prototype.getLengthSafe = function() {
-  if (!this.curves.length) {
-    return 0;
-  }
-  return this.getLength();
-};
-
-EndlessCurve.prototype.removeCurvesBefore = function(position) {
-  var p = this.localDistance(position);
-
-  var lengths = this.getCurveLengths();
-  var remove = 0;
-  var distanceOffset = 0;
-  for (var i = 0; i < lengths.length; i++) {
-    if (p < lengths[i]) {
-      break;
-    }
-    distanceOffset = lengths[i];
-    remove += 1;
-  }
-  if (remove) {
-    this.distanceOffset += distanceOffset;
-    this.slice(remove);
-    this.cacheLengths = null;
-  }
-};
-
-EndlessCurve.prototype.slice = function(index) {
-  this.curves = this.curves.slice(index);
-}
-
-var NormalEndlessCurve = function(nextSection) {
-  this.guides = [];
-  EndlessCurve.call(this, nextSection);
-};
-
-NormalEndlessCurve.prototype = Object.create(EndlessCurve.prototype);
-NormalEndlessCurve.prototype.constructor = NormalEndlessCurve;
-
-NormalEndlessCurve.prototype.add = function(section) {
-  this.guides.push(section.guide);
-  EndlessCurve.prototype.add.call(this, section.curve);
-};
-
-NormalEndlessCurve.prototype.slice = function(index) {
-  this.guides = this.guides.slice(index);
-  EndlessCurve.prototype.slice.call(this, index);
-};
-
-NormalEndlessCurve.prototype.getGuidePointAtLength = function(position) {
-  var l = this.localDistance(position);
-  var u = this.getLtoUmapping(l);
-  return this.getGuidePointAt(u);
-};
-
-NormalEndlessCurve.prototype.getGuidePointAt = function(u) {
-  var t = this.getUtoTmapping(u);
-  return this.getGuidePoint(t);
-};
-
-NormalEndlessCurve.prototype.getGuidePoint = function(t) {
-  var d = t * this.getLength();
-  var curveLengths = this.getCurveLengths();
-  var i = 0,
-    diff, curve, guide;
-
-  while (i < curveLengths.length) {
-
-    if (curveLengths[i] >= d) {
-
-      diff = curveLengths[i] - d;
-      curve = this.curves[i];
-
-      var u = 1 - diff / curve.getLength();
-
-      guide = this.guides[i];
-      return guide.getPointAt(u);
-    }
-
-    i++;
-  }
-
-  return null;
-};
 
 var createGeometry = function(radialSegments, segments) {
   var height = 10;
@@ -299,41 +166,6 @@ var positionBones = function(bones, curve, distance, len) {
   curve.removeCurvesBefore(distance - len);
 };
 
-function generateTexture() {
-  var w = 1;
-  var h = Math.pow(2, 10);
-
-  var canvas = document.createElement('canvas');
-  canvas.width = w;
-  canvas.height = h;
-
-  var context = canvas.getContext('2d');
-  var image = context.getImageData(0, 0, w, h);
-
-  var col = 0,
-    x = 0,
-    y = 0;
-  var stripes = Math.pow(2, 6);
-
-  for (var i = 0, j = 0, l = image.data.length; i < l; i += 4, j++) {
-
-    x = j % w;
-    y = x == 0 ? y + 1 : y;
-
-    col = ((y / h) * stripes) % 1;
-    col = col >= 0.5 ? 0 : 255;
-
-    image.data[i] = col;
-    image.data[i + 1] = col;
-    image.data[i + 2] = col;
-    image.data[i + 3] = 255;
-
-  }
-
-  context.putImageData(image, 0, 0);
-
-  return canvas;
-}
 
 renderer.setSize(width, height);
 document.body.appendChild(renderer.domElement);
@@ -351,195 +183,26 @@ var lightB = new THREE.PointLight('#fff', 1.5);
 lightB.position.set(0, 0, 1000);
 sceneParent.add(lightB);
 
-textureCanvas = generateTexture();
+textureCanvas = generateStripes();
 var texture = new THREE.Texture(textureCanvas);
 texture.needsUpdate = true;
-
-var fragmentShader = THREE.ShaderLib.lambert.fragmentShader;
-fragmentShader = fragmentShader.replace(
-  /outgoingLight \+= diffuseColor\.rgb \* vLightFront \+ emissive;/g,
-  'float lf = (vLightFront.r - 0.6) * 2.0;' +
-  'outgoingLight = mix(diffuseColor.rgb, emissive, lf);'
-);
-var materialA = new CustomFragmentMaterial({
-  color: '#c36ab5',
-  emissive: '#81d2fe',
-  fragmentShader: fragmentShader
-});
-
-var wireframeMaterial = new THREE.MeshLambertMaterial({
-  wireframe: true,
-});
 
 var radialSegments = 16;
 var segments = 128;
 var geometry = createGeometry(radialSegments, segments);
 var bones = createBones(Math.floor(segments / 1));
 addBones(geometry, bones);
+
 var mesh = createMesh(geometry, bones, {
   map: texture,
   fog: true
-    // color: colours.purple,
-    // specular: colours.pink
 });
 scene.add(mesh);
-// var guides = createGuides(10);
-// scene.add(guides[0]);
 
 
-
-var graph = new graphlib.Graph();
-
-var polyhedra = require('polyhedra');
 var poly = polyhedra.platonic.Icosahedron;
-
-var addEdge = function(a, b) {
-  var vertA = new THREE.Vector3().fromArray(poly.vertex[a]);
-  var vertB = new THREE.Vector3().fromArray(poly.vertex[b]);
-
-  vertA.multiplyScalar(8);
-  vertB.multiplyScalar(8);
-
-  var vec = new THREE.Vector3().lerpVectors(
-    vertA,
-    vertB,
-    0.5
-  );
-  var axis = vec.clone().normalize();
-
-  var tangentIn = new THREE.Vector3()
-    .subVectors(vertA, vec)
-    .normalize();
-
-  var tangentOut = tangentIn.clone().applyAxisAngle(axis, Math.PI);
-
-  graph.setEdge(a, b, {
-    vec: vec,
-    tangentOut: tangentOut,
-    tangentIn: tangentIn
-  });
-};
-
-poly.edge.forEach(function(edge) {
-  addEdge(edge[1], edge[0]);
-  addEdge(edge[0], edge[1]);
-});
-
-
-
-var CurveFactory = function(radius) {
-
-  var createCurves = function(plan, startRadius, endRadius) {
-    var curves = [];
-    var startDepthScalar = startRadius / 13.3;
-    var endDepthScalar = endRadius / 13.3
-    var a = plan.startVector.clone();
-    var b = plan.endVector.clone();
-    var ta = plan.startTangent.clone();
-    var tb = plan.endTangent.clone();
-
-    var startDepth = plan.startDepth;
-    var endDepth = plan.endDepth;
-
-    var originalA = a.clone();
-    var a = a.lerp(new THREE.Vector3(), startDepthScalar * startDepth);
-    var b = b.lerp(new THREE.Vector3(), endDepthScalar * endDepth);
-
-    curves.push(new THREE.CubicBezierCurve3(
-      a,
-      a.clone().add(ta.multiplyScalar(startRadius)),
-      b.clone().add(tb.multiplyScalar(endRadius)),
-      b
-    ));
-
-    return curves;
-  };
-
-  var lastNode = graph.nodes()[Math.floor(Math.random() * graph.nodes().length)];
-  var lastEdge;
-  var lastDepth = 1;
-  var occupiedFaces = [];
-
-  var getPlan = function() {
-    var nodes = graph.successors(lastNode);
-    emptyNodes = nodes.filter(function(node) {
-      return occupiedFaces.indexOf(node) === -1;
-    });
-    if (emptyNodes.length) {
-      nodes = emptyNodes;
-    }
-
-    var node = nodes[Math.floor(Math.random() * nodes.length)];
-    var edge = graph.edge(lastNode, node);
-
-    occupiedFaces.push(node);
-    occupiedFaces = occupiedFaces.slice(-8);
-
-    if (lastEdge === undefined) {
-      lastNode = node;
-      lastEdge = edge;
-      return getPlan();
-    }
-
-    var a = lastEdge.vec.clone();
-    var b = edge.vec.clone();
-    var ta = lastEdge.tangentOut;
-    var tb = edge.tangentIn;
-
-    var loop = (
-      a.x == b.x &&
-      a.y == b.y &&
-      a.z == b.z
-    )
-
-    var startDepth = lastDepth;
-    var endDepth = startDepth * -1;
-
-    lastNode = node;
-    lastEdge = edge;
-    lastDepth = endDepth;
-
-    return {
-      startDepth: startDepth,
-      startVector: a,
-      startTangent: ta,
-      endDepth: endDepth,
-      endVector: b,
-      endTangent: tb,
-      loop: loop,
-    }
-  };
-
-  var curveStack = [];
-  var guideStack = [];
-  var variance = radius * 0.1;
-  var lastRadius = radius + variance;
-  var flip = 1;
-
-  this.nextCurve = function() {
-    if (curveStack.length > 0) {
-      var curve = curveStack.pop();
-      var guide = guideStack.pop();
-      return {
-        curve: curve,
-        guide: guide
-      };
-    }
-
-    var plan = getPlan();
-    if (!plan.loop) {
-      flip *= -1;
-    }
-    var nextRadius = radius + variance * flip;
-    curveStack = curveStack.concat(createCurves(plan, radius, radius));
-    guideStack = guideStack.concat(createCurves(plan, lastRadius, nextRadius));
-    lastRadius = nextRadius;
-
-    return this.nextCurve();
-  }
-};
-
-var curveFactory = new CurveFactory(3);
+var graph = createGraph(poly);
+var curveFactory = new CurveFactory(graph, 3);
 var curve = new NormalEndlessCurve(curveFactory.nextCurve);
 
 function render() {
