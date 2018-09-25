@@ -12,8 +12,11 @@
     "bezier-js": "^2.2.15",
     "bezierjs": "0.0.4",
     "budo": "^10.0.4",
+    "canvas-orbit-camera": "^1.0.2",
     "graphlib": "^2.1.5",
     "polyhedra": "^1.0.0",
+    "primitive-cube": "github:vorg/primitive-cube",
+    "regl": "^1.3.7",
     "three": "^0.88.0"
   }
 }

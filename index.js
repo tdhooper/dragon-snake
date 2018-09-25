@@ -6,12 +6,15 @@ var createGraph = require('./create-graph');
 var generateStripes = require('./generate-stripes');
 var CurveFactory = require('./curve-factory');
 var NormalEndlessCurve = require('./normal-endless-curve');
-
+var regl = require('regl')();
+var mat4 = require('gl-mat4');
+var createCube = require('primitive-cube');
+var createCamera = require('canvas-orbit-camera');
 
 /* to regl process 
 
 
-1. render a cube
+// 1. render a cube
 2. render X instanced cubes
 3. convert curve positions to lookup texture
 4. position cubes from lookup texture
@@ -21,7 +24,71 @@ var NormalEndlessCurve = require('./normal-endless-curve');
 
 */
 
+var camera = createCamera(regl._gl.canvas);
+camera.distance = 10;
 
+box = createCube(1, 0.1, 0.5, 1, 1, 1);
+
+var drawTriangle = regl({
+  frag: `
+    precision mediump float;
+
+    varying vec3 vNormal;
+
+    void main() {
+      gl_FragColor = vec4(vNormal * .5 + .5, 1);
+    }
+  `,
+
+  vert: `
+    precision mediump float;
+
+    uniform mat4 proj;
+    uniform mat4 model;
+    uniform mat4 view;
+
+    attribute vec3 position;
+    attribute vec3 normal;
+
+    varying vec3 vNormal;
+
+    void main () {
+      vNormal = normal;
+      gl_Position = proj * view * model * vec4(position, 1);
+    }
+  `,
+
+  attributes: {
+    position: box.positions,
+    normal: box.normals
+  },
+
+  elements: box.cells,
+
+  count: box.cells.length * 3,
+
+  uniforms: {
+    proj: ({viewportWidth, viewportHeight}) =>
+      mat4.perspective([],
+        Math.PI / 10,
+        viewportWidth / viewportHeight,
+        0.01,
+        1000),
+    model: mat4.identity([]),
+    view: () => {
+      return camera.view();
+    }
+  }
+});
+
+regl.frame(function() {
+  camera.tick();
+  drawTriangle();
+});
+
+
+
+/*
 var width = window.innerWidth;
 var height = window.innerHeight;
 
@@ -287,3 +354,5 @@ controls.addEventListener('change', function() {
 window.addEventListener('resize', onWindowResize, false);
 restoreControls()
 animate();
+
+*/
