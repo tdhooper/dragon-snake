@@ -7,7 +7,11 @@ var generateStripes = require('./generate-stripes');
 var CurveFactory = require('./curve-factory');
 var NormalEndlessCurve = require('./normal-endless-curve');
 var regl = require('regl')({
-  extensions: ['angle_instanced_arrays']
+  extensions: [
+    'angle_instanced_arrays',
+    'OES_texture_float',
+    'OES_texture_float_linear'
+  ]
 });
 var mat4 = require('gl-mat4');
 var createCube = require('primitive-cube');
@@ -27,15 +31,29 @@ var createCamera = require('canvas-orbit-camera');
 */
 
 var camera = createCamera(regl._gl.canvas);
-camera.distance = 10;
+camera.distance = 60;
 
 box = createCube(1, 0.1, 0.5, 1, 1, 1);
 
-
-var N = 15;
+var N = 100;
 var instances = Array(N).fill().map((_, i) => {
   return i;
 });
+
+var texturePoints = N;
+var textureConf = {
+  width: texturePoints,
+  height: 1,
+  channels: 3,
+  mag: 'linear',
+  type: 'float'
+};
+var bezierTexture = regl.texture(textureConf);
+
+var poly = polyhedra.platonic.Icosahedron;
+var graph = createGraph(poly);
+var curveFactory = new CurveFactory(graph, 3);
+var curve = new NormalEndlessCurve(curveFactory.nextCurve);
 
 var drawTriangle = regl({
   frag: `
@@ -54,6 +72,8 @@ var drawTriangle = regl({
     uniform mat4 proj;
     uniform mat4 model;
     uniform mat4 view;
+    uniform float instances;
+    uniform sampler2D bezierLUT;
 
     attribute vec3 position;
     attribute vec3 normal;
@@ -64,7 +84,9 @@ var drawTriangle = regl({
     void main () {
       vNormal = normal;
       vec3 pos = position;
-      pos.y += instance;
+      float t = instance / instances;
+      vec3 p = texture2D(bezierLUT, vec2(t, 0)).xyz;
+      pos += p;
       gl_Position = proj * view * model * vec4(pos, 1);
     }
   `,
@@ -94,12 +116,39 @@ var drawTriangle = regl({
     model: mat4.identity([]),
     view: () => {
       return camera.view();
-    }
+    },
+    bezierLUT: bezierTexture,
+    instances: N
   }
 });
 
-regl.frame(function() {
+var distance = 0;
+
+regl.frame(function(context) {
   camera.tick();
+
+  distance = context.time * 5;
+  var len = 30;
+  var curvePoints = [];
+
+  for (var i = 0; i < texturePoints; i++) {
+    var pos = (i / texturePoints) * len;
+    var curvePos = distance + pos;
+    var point = curve.getPointAtLength(curvePos);
+    curvePoints.push(point);
+  }
+
+  var curvePointsFormatted = curvePoints.reduce(function(acc, v) {
+    return acc.concat(
+      v.x,
+      v.y,
+      v.z
+    );
+  }, []);
+
+  textureConf.data = curvePointsFormatted;
+  bezierTexture(textureConf);
+
   drawTriangle();
 });
 

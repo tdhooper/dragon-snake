@@ -13,6 +13,7 @@
     "bezierjs": "0.0.4",
     "budo": "^10.0.4",
     "canvas-orbit-camera": "^1.0.2",
+    "gl-mat4": "^1.2.0",
     "graphlib": "^2.1.5",
     "polyhedra": "^1.0.0",
     "primitive-cube": "github:vorg/primitive-cube",
