@@ -6,7 +6,9 @@ var createGraph = require('./create-graph');
 var generateStripes = require('./generate-stripes');
 var CurveFactory = require('./curve-factory');
 var NormalEndlessCurve = require('./normal-endless-curve');
-var regl = require('regl')();
+var regl = require('regl')({
+  extensions: ['angle_instanced_arrays']
+});
 var mat4 = require('gl-mat4');
 var createCube = require('primitive-cube');
 var createCamera = require('canvas-orbit-camera');
@@ -15,7 +17,7 @@ var createCamera = require('canvas-orbit-camera');
 
 
 // 1. render a cube
-2. render X instanced cubes
+// 2. render X instanced cubes
 3. convert curve positions to lookup texture
 4. position cubes from lookup texture
 5. convert curve normal and tangent to lookup texture
@@ -28,6 +30,12 @@ var camera = createCamera(regl._gl.canvas);
 camera.distance = 10;
 
 box = createCube(1, 0.1, 0.5, 1, 1, 1);
+
+
+var N = 15;
+var instances = Array(N).fill().map((_, i) => {
+  return i;
+});
 
 var drawTriangle = regl({
   frag: `
@@ -49,21 +57,30 @@ var drawTriangle = regl({
 
     attribute vec3 position;
     attribute vec3 normal;
+    attribute float instance;
 
     varying vec3 vNormal;
 
     void main () {
       vNormal = normal;
-      gl_Position = proj * view * model * vec4(position, 1);
+      vec3 pos = position;
+      pos.y += instance;
+      gl_Position = proj * view * model * vec4(pos, 1);
     }
   `,
 
   attributes: {
     position: box.positions,
-    normal: box.normals
+    normal: box.normals,
+    instance: {
+      buffer: instances,
+      divisor: 1
+    },
   },
 
   elements: box.cells,
+
+  instances: N,
 
   count: box.cells.length * 3,
 
