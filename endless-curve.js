@@ -77,6 +77,8 @@ EndlessCurve.prototype.slice = function(index) {
 // Force computeFrenetFrames to use the configured segment
 EndlessCurve.prototype.configureFrenetFrames = function(position, length) {
   this.getPointAtLength(position + length);
+  var pos = this.localDistance(position);
+  position = pos;
   var len = this.getLengthSafe();
   this.frenetFramesStart = position / len;
   this.frenetFramesLength = length / len;

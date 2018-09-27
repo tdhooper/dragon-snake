@@ -6,6 +6,8 @@ var createGraph = require('./create-graph');
 var generateStripes = require('./generate-stripes');
 var CurveFactory = require('./curve-factory');
 var EndlessCurve = require('./endless-curve');
+var NormalEndlessCurve = require('./normal-endless-curve');
+
 var regl = require('regl')({
   extensions: [
     'angle_instanced_arrays',
@@ -35,7 +37,7 @@ camera.distance = 60;
 
 box = createCube(1, 0.1, 0.5, 1, 1, 1);
 
-var N = 100;
+var N = 200;
 var instances = Array(N).fill().map((_, i) => {
   return i;
 });
@@ -79,17 +81,40 @@ var drawTriangle = regl({
     attribute vec3 normal;
     attribute float instance;
     attribute vec3 iPosition;
+    attribute vec4 iNormalTangent;
 
     varying vec3 vNormal;
+
+    vec3 decodeNormal(vec2 encoded) {
+        vec3 n;
+        n.xy = encoded * 2. - 1.;
+        n.z = sqrt(1. - dot(n.xy, n.xy));
+        return normalize(n);
+    }
 
     void main () {
       vNormal = normal;
       vec3 pos = position;
       float t = instance / instances;
       // vec3 p = texture2D(bezierLUT, vec2(t, 0)).xyz;
+      
       vec3 p = iPosition;
+      
+
+      vec3 iNormal = decodeNormal(iNormalTangent.xy);
+      vec3 iTangent = decodeNormal(iNormalTangent.zw);
+      vec3 iBinormal = cross(iNormal, iTangent);
+      
+      mat3 iModel = mat3(iNormal, iTangent, iBinormal);
+
+      pos.xyz = iModel * pos.xyz;
       pos += p;
-      gl_Position = proj * view * model * vec4(pos, 1);
+
+      vec4 pos4 = proj * view * model * vec4(pos, 1);
+
+      
+
+      gl_Position = pos4;
     }
   `,
 
@@ -133,7 +158,7 @@ var drawTriangle = regl({
 });
 
 var distance = 0;
-var len = 30;
+var len = 60;
 
 regl.frame(function(context) {
   camera.tick();
@@ -160,14 +185,14 @@ regl.frame(function(context) {
   }, []);
 
   curve.configureFrenetFrames(distance, len);
-  var frames = curve.computeFrenetFrames(N - 1);
+  var frames = curve.computeFrenetFrames(N - 0);
 
   var normalTangent = frames.normals.reduce(function(acc, normal, i) {
     return acc.concat(
-      normal.x,
-      normal.y,
-      frames.tangents[i].x,
-      frames.tangents[i].y
+      normal.x * .5 + .5,
+      normal.y * .5 + .5,
+      frames.tangents[i].x * .5 + .5,
+      frames.tangents[i].y * .5 + .5
     );
   }, []);
 
