@@ -18,29 +18,44 @@ EndlessCurve.prototype.getLtoUmapping = function(l) {
   return l / len;
 };
 
-EndlessCurve.prototype.getPointAtLength = function(position) {
-  var p = this.localDistance(position);
+// EndlessCurve.prototype.getPointAtLength = function(position) {
+//   var p = this.localDistance(position);
+
+//   var len = this.getLengthSafe();
+
+//   if (p < len) {
+//     var u = this.getLtoUmapping(p);
+//     var point = this.getPointAt(u);
+//     return point;
+//   }
+
+//   var newCurve = this.nextCurve();
+//   this.add(newCurve);
+
+//   return this.getPointAtLength(position);
+// };
+
+// EndlessCurve.prototype.getTangentAtLength = function(position) {
+//   var p = this.localDistance(position);
+//   var len = this.getLengthSafe();
+//   var t = p / len;
+//   var tangent = this.getTangentAt(t);
+//   return tangent;
+// };
+
+EndlessCurve.prototype.fillLength = function(length) {
+  var p = this.localDistance(length);
 
   var len = this.getLengthSafe();
 
   if (p < len) {
-    var u = this.getLtoUmapping(p);
-    var point = this.getPointAt(u);
-    return point;
+    return;
   }
 
   var newCurve = this.nextCurve();
   this.add(newCurve);
 
-  return this.getPointAtLength(position);
-};
-
-EndlessCurve.prototype.getTangentAtLength = function(position) {
-  var p = this.localDistance(position);
-  var len = this.getLengthSafe();
-  var t = p / len;
-  var tangent = this.getTangentAt(t);
-  return tangent;
+  this.fillLength(length);
 };
 
 EndlessCurve.prototype.getLengthSafe = function() {
@@ -75,10 +90,12 @@ EndlessCurve.prototype.slice = function(index) {
 };
 
 // Force computeFrenetFrames to use the configured segment
-EndlessCurve.prototype.configureFrenetFrames = function(position, length) {
-  this.getPointAtLength(position + length);
-  var pos = this.localDistance(position);
-  position = pos;
+EndlessCurve.prototype.configureStartEnd = function(position, length) {
+  this.fillLength(position + length);
+
+  position = this.localDistance(position);
+  length = this.localDistance(length);
+
   var len = this.getLengthSafe();
   this.frenetFramesStart = position / len;
   this.frenetFramesLength = length / len;
@@ -88,5 +105,11 @@ EndlessCurve.prototype.getTangentAt = function(u) {
   var u2 = this.frenetFramesStart + this.frenetFramesLength * u;
   return parent.getTangentAt.call(this, u2);
 };
+
+EndlessCurve.prototype.getPointAt = function(u) {
+  var u2 = this.frenetFramesStart + this.frenetFramesLength * u;
+  return parent.getPointAt.call(this, u2);
+};
+
 
 module.exports = EndlessCurve;

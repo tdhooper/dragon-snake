@@ -160,7 +160,7 @@ var drawTriangle = regl({
 var distance = 0;
 var len = 60;
 
-regl.frame(function(context) {
+function draw(context) {
   camera.tick();
 
   distance = context.time * 5;
@@ -168,11 +168,10 @@ regl.frame(function(context) {
   var curveNormals = [];
 
   var curvePoints = [];
+  curve.configureStartEnd(distance, len);
 
   for (var i = 0; i < N; i++) {
-    var pos = (i / N) * len;
-    var curvePos = distance + pos;
-    var point = curve.getPointAtLength(curvePos);
+    var point = curve.getPointAt(i / N);
     curvePoints.push(point);
   }
 
@@ -184,7 +183,6 @@ regl.frame(function(context) {
     );
   }, []);
 
-  curve.configureFrenetFrames(distance, len);
   var frames = curve.computeFrenetFrames(N - 0);
 
   var normalTangent = frames.normals.reduce(function(acc, normal, i) {
@@ -204,6 +202,11 @@ regl.frame(function(context) {
     position: curvePointsFormatted,
     normalTangent: normalTangent
   });
+}
+
+// regl.frame(draw);
+draw({
+  time: 0
 });
 
 
