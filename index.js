@@ -103,6 +103,10 @@ var drawTriangle = regl({
     iPosition: {
       buffer: regl.prop('position'),
       divisor: 3
+    },
+    iNormalTangent: {
+      buffer: regl.prop('normalTangent'),
+      divisor: 4
     }
   },
 
@@ -131,9 +135,6 @@ var drawTriangle = regl({
 var distance = 0;
 var len = 30;
 
-// curve.configureFrenetFrames(distance, len);
-// var frames = curve.computeFrenetFrames(texturePoints - 1);
-
 regl.frame(function(context) {
   camera.tick();
 
@@ -158,11 +159,25 @@ regl.frame(function(context) {
     );
   }, []);
 
+  curve.configureFrenetFrames(distance, len);
+  var frames = curve.computeFrenetFrames(N - 1);
+
+  var normalTangent = frames.normals.reduce(function(acc, normal, i) {
+    return acc.concat(
+      normal.x,
+      normal.y,
+      frames.tangents[i].x,
+      frames.tangents[i].y
+    );
+  }, []);
+
+
   // textureConf.data = curvePointsFormatted;
   // bezierTexture(textureConf);
 
   drawTriangle({
-    position: curvePointsFormatted
+    position: curvePointsFormatted,
+    normalTangent: normalTangent
   });
 });
 
