@@ -35,9 +35,9 @@ var createCamera = require('canvas-orbit-camera');
 var camera = createCamera(regl._gl.canvas);
 camera.distance = 60;
 
-box = createCube(1, 0.1, 0.5, 1, 1, 1);
+box = createCube(1, 1, 1, 1, 1, 1);
 
-var N = 200;
+var N = 10;
 var instances = Array(N).fill().map((_, i) => {
   return i;
 });
@@ -107,7 +107,7 @@ var drawTriangle = regl({
       
       mat3 iModel = mat3(iNormal, iTangent, iBinormal);
 
-      pos.xyz = iModel * pos.xyz;
+      // pos.xyz = iModel * pos.xyz;
       pos += p;
 
       vec4 pos4 = proj * view * model * vec4(pos, 1);
@@ -127,11 +127,11 @@ var drawTriangle = regl({
     },
     iPosition: {
       buffer: regl.prop('position'),
-      divisor: 3
+      divisor: 1
     },
     iNormalTangent: {
       buffer: regl.prop('normalTangent'),
-      divisor: 4
+      divisor: 1
     }
   },
 
@@ -158,7 +158,7 @@ var drawTriangle = regl({
 });
 
 var distance = 0;
-var len = 60;
+var len = 10;
 
 function draw(context) {
   camera.tick();
@@ -204,10 +204,10 @@ function draw(context) {
   });
 }
 
-// regl.frame(draw);
-draw({
-  time: 0
-});
+regl.frame(draw);
+// draw({
+//   time: 0
+// });
 
 
 
