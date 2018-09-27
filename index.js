@@ -5,7 +5,7 @@ var polyhedra = require('polyhedra');
 var createGraph = require('./create-graph');
 var generateStripes = require('./generate-stripes');
 var CurveFactory = require('./curve-factory');
-var NormalEndlessCurve = require('./normal-endless-curve');
+var EndlessCurve = require('./endless-curve');
 var regl = require('regl')({
   extensions: [
     'angle_instanced_arrays',
@@ -22,8 +22,8 @@ var createCamera = require('canvas-orbit-camera');
 
 // 1. render a cube
 // 2. render X instanced cubes
-3. convert curve positions to lookup texture
-4. position cubes from lookup texture
+// 3. convert curve positions to lookup texture
+// 4. position cubes from lookup texture
 5. convert curve normal and tangent to lookup texture
 6. orient cubes from normal/tangent texture
 7. offset cubes along rotated normal to form a tight phyllotaxis
@@ -40,20 +40,20 @@ var instances = Array(N).fill().map((_, i) => {
   return i;
 });
 
-var texturePoints = N;
-var textureConf = {
-  width: texturePoints,
-  height: 1,
-  channels: 3,
-  mag: 'linear',
-  type: 'float'
-};
-var bezierTexture = regl.texture(textureConf);
+// var texturePoints = N;
+// var textureConf = {
+//   width: texturePoints,
+//   height: 1,
+//   channels: 3,
+//   mag: 'linear',
+//   type: 'float'
+// };
+// var bezierTexture = regl.texture(textureConf);
 
 var poly = polyhedra.platonic.Icosahedron;
 var graph = createGraph(poly);
 var curveFactory = new CurveFactory(graph, 3);
-var curve = new NormalEndlessCurve(curveFactory.nextCurve);
+var curve = new EndlessCurve(curveFactory.nextCurve);
 
 var drawTriangle = regl({
   frag: `
@@ -73,11 +73,12 @@ var drawTriangle = regl({
     uniform mat4 model;
     uniform mat4 view;
     uniform float instances;
-    uniform sampler2D bezierLUT;
+    // uniform sampler2D bezierLUT;
 
     attribute vec3 position;
     attribute vec3 normal;
     attribute float instance;
+    attribute vec3 iPosition;
 
     varying vec3 vNormal;
 
@@ -85,7 +86,8 @@ var drawTriangle = regl({
       vNormal = normal;
       vec3 pos = position;
       float t = instance / instances;
-      vec3 p = texture2D(bezierLUT, vec2(t, 0)).xyz;
+      // vec3 p = texture2D(bezierLUT, vec2(t, 0)).xyz;
+      vec3 p = iPosition;
       pos += p;
       gl_Position = proj * view * model * vec4(pos, 1);
     }
@@ -98,6 +100,10 @@ var drawTriangle = regl({
       buffer: instances,
       divisor: 1
     },
+    iPosition: {
+      buffer: regl.prop('position'),
+      divisor: 3
+    }
   },
 
   elements: box.cells,
@@ -117,22 +123,28 @@ var drawTriangle = regl({
     view: () => {
       return camera.view();
     },
-    bezierLUT: bezierTexture,
+    // bezierLUT: bezierTexture,
     instances: N
   }
 });
 
 var distance = 0;
+var len = 30;
+
+// curve.configureFrenetFrames(distance, len);
+// var frames = curve.computeFrenetFrames(texturePoints - 1);
 
 regl.frame(function(context) {
   camera.tick();
 
   distance = context.time * 5;
-  var len = 30;
+  var curvePositions = [];
+  var curveNormals = [];
+
   var curvePoints = [];
 
-  for (var i = 0; i < texturePoints; i++) {
-    var pos = (i / texturePoints) * len;
+  for (var i = 0; i < N; i++) {
+    var pos = (i / N) * len;
     var curvePos = distance + pos;
     var point = curve.getPointAtLength(curvePos);
     curvePoints.push(point);
@@ -146,10 +158,12 @@ regl.frame(function(context) {
     );
   }, []);
 
-  textureConf.data = curvePointsFormatted;
-  bezierTexture(textureConf);
+  // textureConf.data = curvePointsFormatted;
+  // bezierTexture(textureConf);
 
-  drawTriangle();
+  drawTriangle({
+    position: curvePointsFormatted
+  });
 });
 
 

@@ -92,6 +92,7 @@ var CurveFactory = function(graph, radius) {
     if (curveStack.length > 0) {
       var curve = curveStack.pop();
       var guide = guideStack.pop();
+      return curve;
       return {
         curve: curve,
         guide: guide

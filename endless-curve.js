@@ -7,6 +7,8 @@ var EndlessCurve = function(nextCurve) {
 EndlessCurve.prototype = Object.create(THREE.CurvePath.prototype);
 EndlessCurve.prototype.constructor = EndlessCurve;
 
+var parent = THREE.CurvePath.prototype;
+
 EndlessCurve.prototype.localDistance = function(globalDistance) {
   return globalDistance - this.distanceOffset;
 };
@@ -70,6 +72,19 @@ EndlessCurve.prototype.removeCurvesBefore = function(position) {
 
 EndlessCurve.prototype.slice = function(index) {
   this.curves = this.curves.slice(index);
+};
+
+// Force computeFrenetFrames to use the configured segment
+EndlessCurve.prototype.configureFrenetFrames = function(position, length) {
+  this.getPointAtLength(position + length);
+  var len = this.getLengthSafe();
+  this.frenetFramesStart = position / len;
+  this.frenetFramesLength = length / len;
+};
+
+EndlessCurve.prototype.getTangentAt = function(u) {
+  var u2 = this.frenetFramesStart + this.frenetFramesLength * u;
+  return parent.getTangentAt.call(this, u2);
 };
 
 module.exports = EndlessCurve;
