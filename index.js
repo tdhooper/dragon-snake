@@ -19,6 +19,33 @@ var mat4 = require('gl-mat4');
 var createCube = require('primitive-cube');
 var createCamera = require('canvas-orbit-camera');
 
+
+
+// function CustomSinCurve( scale ) {
+
+//   THREE.Curve.call( this );
+
+//   this.scale = ( scale === undefined ) ? 1 : scale;
+
+// }
+
+// CustomSinCurve.prototype = Object.create( THREE.Curve.prototype );
+// CustomSinCurve.prototype.constructor = CustomSinCurve;
+
+// CustomSinCurve.prototype.getPoint = function ( t ) {
+
+//   var tz = 0;
+//   var ty = Math.sin( 2 * Math.PI * t );
+//   var tx = Math.cos( 2 * Math.PI * t );
+
+//   return new THREE.Vector3( tx, ty, tz ).multiplyScalar( this.scale );
+
+// };
+
+
+
+
+
 /* to regl process 
 
 
@@ -35,9 +62,9 @@ var createCamera = require('canvas-orbit-camera');
 var camera = createCamera(regl._gl.canvas);
 camera.distance = 60;
 
-box = createCube(1, 1, 1, 1, 1, 1);
+box = createCube(1, .5, .25, 1, 1, 1);
 
-var N = 10;
+var N = 50;
 var instances = Array(N).fill().map((_, i) => {
   return i;
 });
@@ -57,6 +84,9 @@ var graph = createGraph(poly);
 var curveFactory = new CurveFactory(graph, 3);
 var curve = new EndlessCurve(curveFactory.nextCurve);
 
+// var curve = new CustomSinCurve( 5 );
+
+
 var drawTriangle = regl({
   frag: `
     precision mediump float;
@@ -72,7 +102,6 @@ var drawTriangle = regl({
     precision mediump float;
 
     uniform mat4 proj;
-    uniform mat4 model;
     uniform mat4 view;
     uniform float instances;
     // uniform sampler2D bezierLUT;
@@ -81,7 +110,8 @@ var drawTriangle = regl({
     attribute vec3 normal;
     attribute float instance;
     attribute vec3 iPosition;
-    attribute vec4 iNormalTangent;
+    attribute vec3 iNormal;
+    attribute vec3 iTangent;
 
     varying vec3 vNormal;
 
@@ -94,27 +124,41 @@ var drawTriangle = regl({
 
     void main () {
       vNormal = normal;
-      vec3 pos = position;
-      float t = instance / instances;
+      //float t = instance / instances;
       // vec3 p = texture2D(bezierLUT, vec2(t, 0)).xyz;
       
-      vec3 p = iPosition;
+      vec3 n = iNormal * 2. - 1.;
+      vec3 t = iTangent * 2. - 1.;
+      vec3 b = cross(t, n);
+
+      vNormal = t;
+
+      mat4 iPositionMat = mat4(
+        1, 0, 0, iPosition.x,
+        0, 1, 0, iPosition.y,
+        0, 0, 1, iPosition.z,
+        0, 0, 0, 1
+      );
       
+      mat4 iRotationMat = mat4(
+        n.x, t.x, b.x, 0,
+        n.y, t.y, b.y, 0,
+        n.z, t.z, b.z, 0,
+        0, 0, 0, 1
+      );
 
-      vec3 iNormal = decodeNormal(iNormalTangent.xy);
-      vec3 iTangent = decodeNormal(iNormalTangent.zw);
-      vec3 iBinormal = cross(iNormal, iTangent);
-      
-      mat3 iModel = mat3(iNormal, iTangent, iBinormal);
+      iRotationMat = mat4(
+        vec4(n, 0),
+        vec4(t, 0),
+        vec4(b, 0),
+        0, 0, 0, 1
+      );
 
-      // pos.xyz = iModel * pos.xyz;
-      pos += p;
+      vec4 pos = vec4(position, 1);
 
-      vec4 pos4 = proj * view * model * vec4(pos, 1);
+      pos = proj * view * (iRotationMat * pos * iPositionMat );
 
-      
-
-      gl_Position = pos4;
+      gl_Position = pos;
     }
   `,
 
@@ -129,8 +173,12 @@ var drawTriangle = regl({
       buffer: regl.prop('position'),
       divisor: 1
     },
-    iNormalTangent: {
-      buffer: regl.prop('normalTangent'),
+    iNormal: {
+      buffer: regl.prop('normal'),
+      divisor: 1
+    },
+    iTangent: {
+      buffer: regl.prop('tangent'),
       divisor: 1
     }
   },
@@ -148,7 +196,6 @@ var drawTriangle = regl({
         viewportWidth / viewportHeight,
         0.01,
         1000),
-    model: mat4.identity([]),
     view: () => {
       return camera.view();
     },
@@ -158,7 +205,7 @@ var drawTriangle = regl({
 });
 
 var distance = 0;
-var len = 10;
+var len = 50;
 
 function draw(context) {
   camera.tick();
@@ -185,22 +232,31 @@ function draw(context) {
 
   var frames = curve.computeFrenetFrames(N - 0);
 
-  var normalTangent = frames.normals.reduce(function(acc, normal, i) {
+  // console.log(frames);
+
+  var normal = frames.normals.reduce(function(acc, v, i) {
     return acc.concat(
-      normal.x * .5 + .5,
-      normal.y * .5 + .5,
-      frames.tangents[i].x * .5 + .5,
-      frames.tangents[i].y * .5 + .5
+      v.x * .5 + .5,
+      v.y * .5 + .5,
+      v.z * .5 + .5
     );
   }, []);
 
+  var tangent = frames.tangents.reduce(function(acc, v, i) {
+    return acc.concat(
+      v.x * .5 + .5,
+      v.y * .5 + .5,
+      v.z * .5 + .5
+    );
+  }, []);
 
   // textureConf.data = curvePointsFormatted;
   // bezierTexture(textureConf);
 
   drawTriangle({
     position: curvePointsFormatted,
-    normalTangent: normalTangent
+    normal: normal,
+    tangent: tangent
   });
 }
 
