@@ -21,26 +21,26 @@ var createCamera = require('canvas-orbit-camera');
 
 
 
-// function CustomSinCurve( scale ) {
+function CustomSinCurve( scale ) {
 
-//   THREE.Curve.call( this );
+  THREE.Curve.call( this );
 
-//   this.scale = ( scale === undefined ) ? 1 : scale;
+  this.scale = ( scale === undefined ) ? 1 : scale;
 
-// }
+}
 
-// CustomSinCurve.prototype = Object.create( THREE.Curve.prototype );
-// CustomSinCurve.prototype.constructor = CustomSinCurve;
+CustomSinCurve.prototype = Object.create( THREE.Curve.prototype );
+CustomSinCurve.prototype.constructor = CustomSinCurve;
 
-// CustomSinCurve.prototype.getPoint = function ( t ) {
+CustomSinCurve.prototype.getPoint = function ( t ) {
 
-//   var tz = 0;
-//   var ty = Math.sin( 2 * Math.PI * t );
-//   var tx = Math.cos( 2 * Math.PI * t );
+  var tz = 0;
+  var ty = Math.sin( 2 * Math.PI * t );
+  var tx = Math.cos( 2 * Math.PI * t );
 
-//   return new THREE.Vector3( tx, ty, tz ).multiplyScalar( this.scale );
+  return new THREE.Vector3( tx, ty, tz ).multiplyScalar( this.scale );
 
-// };
+};
 
 
 
@@ -62,9 +62,9 @@ var createCamera = require('canvas-orbit-camera');
 var camera = createCamera(regl._gl.canvas);
 camera.distance = 60;
 
-box = createCube(1, .5, .25, 1, 1, 1);
+box = createCube(.5, .5, .1, 1, 1, 1);
 
-var N = 50;
+var N = 500;
 var instances = Array(N).fill().map((_, i) => {
   return i;
 });
@@ -124,14 +124,14 @@ var drawTriangle = regl({
 
     void main () {
       vNormal = normal;
-      //float t = instance / instances;
+      float tt = instance / instances;
       // vec3 p = texture2D(bezierLUT, vec2(t, 0)).xyz;
       
       vec3 n = iNormal * 2. - 1.;
       vec3 t = iTangent * 2. - 1.;
       vec3 b = cross(t, n);
 
-      vNormal = t;
+      // vNormal = t;
 
       mat4 iPositionMat = mat4(
         1, 0, 0, iPosition.x,
@@ -147,16 +147,50 @@ var drawTriangle = regl({
         0, 0, 0, 1
       );
 
-      iRotationMat = mat4(
-        vec4(n, 0),
-        vec4(t, 0),
-        vec4(b, 0),
-        0, 0, 0, 1
-      );
+      // iRotationMat = mat4(
+      //   vec4(n, 0),
+      //   vec4(t, 0),
+      //   vec4(b, 0),
+      //   0, 0, 0, 1
+      // );
 
       vec4 pos = vec4(position, 1);
 
-      pos = proj * view * (iRotationMat * pos * iPositionMat );
+      float rot = tt * instances;
+      vec2 offset = vec2(sin(rot), cos(rot)) * 1.;
+
+      mat4 rotx = mat4(
+        1, 0, 0, 0,
+        0, cos(rot), -sin(rot), 0,
+        0, sin(rot), cos(rot), 0,
+        0, 0, 0, 1
+      );
+
+      mat4 roty = mat4(
+        cos(rot), 0, sin(rot), 0,
+        0, 1, 0, 0,
+        -sin(rot), 0, cos(rot), 0,
+        0, 0, 0, 1
+      );
+
+      mat4 rotz = mat4(
+        cos(rot), -sin(rot), 0, 0,
+        sin(rot), cos(rot), 0, 0,
+        0, 0, 1, 0,
+        0, 0, 0, 1
+      );
+
+      
+      pos.z += 1.;
+      pos = roty * pos;
+      
+      pos = pos * iRotationMat;
+
+
+      // pos.xy += offset;
+
+      pos = pos * iPositionMat;
+      pos = proj * view * pos;
 
       gl_Position = pos;
     }
@@ -205,7 +239,7 @@ var drawTriangle = regl({
 });
 
 var distance = 0;
-var len = 50;
+var len = 30;
 
 function draw(context) {
   camera.tick();
