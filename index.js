@@ -62,22 +62,24 @@ CustomSinCurve.prototype.getPoint = function ( t ) {
 var camera = createCamera(regl._gl.canvas);
 camera.distance = 60;
 
-box = createCube(.5, 1.5, .1, 1, 1, 1);
+box = createCube(.5, 1.5, .25, 1, 1, 1);
 
-var N = 500;
+var N = 1000;
 var instances = Array(N).fill().map((_, i) => {
   return i;
 });
 
-// var texturePoints = N;
-// var textureConf = {
-//   width: texturePoints,
-//   height: 1,
-//   channels: 3,
-//   mag: 'linear',
-//   type: 'float'
-// };
-// var bezierTexture = regl.texture(textureConf);
+var texturePoints = 100;
+var textureConf = {
+  width: texturePoints,
+  height: 1,
+  channels: 3,
+  mag: 'linear',
+  type: 'float'
+};
+var positionTex = regl.texture(textureConf);
+var normalTex = regl.texture(textureConf);
+var tangentTex = regl.texture(textureConf);
 
 var poly = polyhedra.platonic.Icosahedron;
 var graph = createGraph(poly);
@@ -104,23 +106,16 @@ var drawTriangle = regl({
     uniform mat4 proj;
     uniform mat4 view;
     uniform float instances;
-    // uniform sampler2D bezierLUT;
+    
+    uniform sampler2D positionTex;
+    uniform sampler2D normalTex;
+    uniform sampler2D tangentTex;
 
     attribute vec3 position;
     attribute vec3 normal;
     attribute float instance;
-    attribute vec3 iPosition;
-    attribute vec3 iNormal;
-    attribute vec3 iTangent;
 
     varying vec3 vNormal;
-
-    vec3 decodeNormal(vec2 encoded) {
-        vec3 n;
-        n.xy = encoded * 2. - 1.;
-        n.z = sqrt(1. - dot(n.xy, n.xy));
-        return normalize(n);
-    }
 
     void pR(inout vec2 p, float a) {
         p = cos(a)*p + sin(a)*vec2(p.y, -p.x);
@@ -129,8 +124,11 @@ var drawTriangle = regl({
     void main () {
       vNormal = normal;
       float tt = instance / instances;
-      // vec3 p = texture2D(bezierLUT, vec2(t, 0)).xyz;
       
+      vec3 iPosition = texture2D(positionTex, vec2(tt, 0)).xyz;
+      vec3 iNormal = texture2D(normalTex, vec2(tt, 0)).xyz;
+      vec3 iTangent = texture2D(tangentTex, vec2(tt, 0)).xyz;
+
       vec3 n = iNormal * 2. - 1.;
       vec3 t = iTangent * 2. - 1.;
       vec3 b = cross(t, n);
@@ -189,9 +187,12 @@ var drawTriangle = regl({
       
 
       pR(pos.yz, .5); //x
+      // pR(vNormal.yz, .5);
       // pos.y -= 2.;
       pR(pos.xz, rot); //y
+      // pR(vNormal.xz, rot);
       // pos = roty * pos;
+
       
       
       pos = pos * iRotationMat;
@@ -212,18 +213,6 @@ var drawTriangle = regl({
     instance: {
       buffer: instances,
       divisor: 1
-    },
-    iPosition: {
-      buffer: regl.prop('position'),
-      divisor: 1
-    },
-    iNormal: {
-      buffer: regl.prop('normal'),
-      divisor: 1
-    },
-    iTangent: {
-      buffer: regl.prop('tangent'),
-      divisor: 1
     }
   },
 
@@ -243,7 +232,9 @@ var drawTriangle = regl({
     view: () => {
       return camera.view();
     },
-    // bezierLUT: bezierTexture,
+    positionTex: positionTex,
+    normalTex: normalTex,
+    tangentTex: tangentTex,
     instances: N
   }
 });
@@ -255,18 +246,15 @@ function draw(context) {
   camera.tick();
 
   distance = context.time * 5;
-  var curvePositions = [];
-  var curveNormals = [];
-
-  var curvePoints = [];
   curve.configureStartEnd(distance, len);
 
-  for (var i = 0; i < N; i++) {
-    var point = curve.getPointAt(i / N);
+  var curvePoints = [];
+  for (var i = 0; i < texturePoints; i++) {
+    var point = curve.getPointAt(i / texturePoints);
     curvePoints.push(point);
   }
 
-  var curvePointsFormatted = curvePoints.reduce(function(acc, v) {
+  var position = curvePoints.reduce(function(acc, v) {
     return acc.concat(
       v.x,
       v.y,
@@ -274,7 +262,7 @@ function draw(context) {
     );
   }, []);
 
-  var frames = curve.computeFrenetFrames(N - 0);
+  var frames = curve.computeFrenetFrames(texturePoints - 1);
 
   // console.log(frames);
 
@@ -294,20 +282,22 @@ function draw(context) {
     );
   }, []);
 
-  // textureConf.data = curvePointsFormatted;
-  // bezierTexture(textureConf);
+  textureConf.data = position;
+  positionTex(textureConf);
 
-  drawTriangle({
-    position: curvePointsFormatted,
-    normal: normal,
-    tangent: tangent
-  });
+  textureConf.data = normal;
+  normalTex(textureConf);
+
+  textureConf.data = tangent;
+  tangentTex(textureConf);
+
+  drawTriangle();
 }
 
-// regl.frame(draw);
-draw({
-  time: 0
-});
+regl.frame(draw);
+// draw({
+//   time: 0
+// });
 
 
 
