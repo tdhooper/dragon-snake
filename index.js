@@ -121,6 +121,33 @@ var drawTriangle = regl({
         p = cos(a)*p + sin(a)*vec2(p.y, -p.x);
     }
 
+    mat4 rotateX(float a) {
+      return mat4(
+        1, 0, 0, 0,
+        0, cos(a), -sin(a), 0,
+        0, sin(a), cos(a), 0,
+        0, 0, 0, 1
+      );
+    }
+
+    mat4 rotateY(float a) {
+      return mat4(
+        cos(a), 0, sin(a), 0,
+        0, 1, 0, 0,
+        -sin(a), 0, cos(a), 0,
+        0, 0, 0, 1
+      );
+    }
+
+    mat4 rotateZ(float a) {
+      return mat4(
+        cos(a), -sin(a), 0, 0,
+        sin(a), cos(a), 0, 0,
+        0, 0, 1, 0,
+        0, 0, 0, 1
+      );
+    }
+
     void main () {
       vNormal = normal;
       float tt = instance / instances;
@@ -161,41 +188,19 @@ var drawTriangle = regl({
       float rot = tt * instances;
       vec2 offset = vec2(sin(rot), cos(rot)) * 1.;
 
-      mat4 rotx = mat4(
-        1, 0, 0, 0,
-        0, cos(rot), -sin(rot), 0,
-        0, sin(rot), cos(rot), 0,
-        0, 0, 0, 1
-      );
-
-      mat4 roty = mat4(
-        cos(rot), 0, sin(rot), 0,
-        0, 1, 0, 0,
-        -sin(rot), 0, cos(rot), 0,
-        0, 0, 0, 1
-      );
-
-      mat4 rotz = mat4(
-        cos(rot), -sin(rot), 0, 0,
-        sin(rot), cos(rot), 0, 0,
-        0, 0, 1, 0,
-        0, 0, 0, 1
-      );
-
-      
       pos.z += 1.;
       
 
       pR(pos.yz, .5); //x
-      // pR(vNormal.yz, .5);
+      pR(vNormal.yz, .5);
       // pos.y -= 2.;
       pR(pos.xz, rot); //y
-      // pR(vNormal.xz, rot);
+      pR(vNormal.xz, rot);
       // pos = roty * pos;
-
-      
       
       pos = pos * iRotationMat;
+
+      vNormal = (vec4(vNormal, 0) * iRotationMat).xyz;
   
 
       // pos.xy += offset;
