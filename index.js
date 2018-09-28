@@ -62,7 +62,7 @@ CustomSinCurve.prototype.getPoint = function ( t ) {
 var camera = createCamera(regl._gl.canvas);
 camera.distance = 60;
 
-box = createCube(.5, .5, .1, 1, 1, 1);
+box = createCube(.5, 1.5, .1, 1, 1, 1);
 
 var N = 500;
 var instances = Array(N).fill().map((_, i) => {
@@ -120,6 +120,10 @@ var drawTriangle = regl({
         n.xy = encoded * 2. - 1.;
         n.z = sqrt(1. - dot(n.xy, n.xy));
         return normalize(n);
+    }
+
+    void pR(inout vec2 p, float a) {
+        p = cos(a)*p + sin(a)*vec2(p.y, -p.x);
     }
 
     void main () {
@@ -182,10 +186,16 @@ var drawTriangle = regl({
 
       
       pos.z += 1.;
-      pos = roty * pos;
+      
+
+      pR(pos.yz, .5); //x
+      // pos.y -= 2.;
+      pR(pos.xz, rot); //y
+      // pos = roty * pos;
+      
       
       pos = pos * iRotationMat;
-
+  
 
       // pos.xy += offset;
 
@@ -294,10 +304,10 @@ function draw(context) {
   });
 }
 
-regl.frame(draw);
-// draw({
-//   time: 0
-// });
+// regl.frame(draw);
+draw({
+  time: 0
+});
 
 
 
