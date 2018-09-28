@@ -149,7 +149,6 @@ var drawTriangle = regl({
     }
 
     void main () {
-      vNormal = normal;
       float tt = instance / instances;
       
       vec3 iPosition = texture2D(positionTex, vec2(tt, 0)).xyz;
@@ -159,8 +158,6 @@ var drawTriangle = regl({
       vec3 n = iNormal * 2. - 1.;
       vec3 t = iTangent * 2. - 1.;
       vec3 b = cross(t, n);
-
-      // vNormal = t;
 
       mat4 iPositionMat = mat4(
         1, 0, 0, iPosition.x,
@@ -176,35 +173,17 @@ var drawTriangle = regl({
         0, 0, 0, 1
       );
 
-      // iRotationMat = mat4(
-      //   vec4(n, 0),
-      //   vec4(t, 0),
-      //   vec4(b, 0),
-      //   0, 0, 0, 1
-      // );
-
       vec4 pos = vec4(position, 1);
 
       float rot = tt * instances;
-      vec2 offset = vec2(sin(rot), cos(rot)) * 1.;
 
       pos.z += 1.;
-      
 
-      pR(pos.yz, .5); //x
-      pR(vNormal.yz, .5);
-      // pos.y -= 2.;
-      pR(pos.xz, rot); //y
-      pR(vNormal.xz, rot);
-      // pos = roty * pos;
-      
+      iRotationMat = rotateX(-.5) * rotateY(rot) * iRotationMat;
       pos = pos * iRotationMat;
 
-      vNormal = (vec4(vNormal, 0) * iRotationMat).xyz;
+      vNormal = (vec4(normal, 0) * iRotationMat).xyz;
   
-
-      // pos.xy += offset;
-
       pos = pos * iPositionMat;
       pos = proj * view * pos;
 
