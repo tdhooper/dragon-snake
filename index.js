@@ -60,7 +60,7 @@ CustomSinCurve.prototype.getPoint = function ( t ) {
 */
 
 var camera = createCamera(regl._gl.canvas);
-camera.distance = 60;
+camera.distance = 30;
 
 box = createCube(.5, 2.5, .25, 1, 1, 1);
 
@@ -177,11 +177,9 @@ var drawTriangle = regl({
       thick = smoothstep(0., .95, tt) - smoothstep(.95, 1., tt);
 
 
-      vec4 pos = vec4(position * mix(.5, 1., thick), 1);
+      vec4 pos = vec4(position * mix(.2, 1., thick), 1);
 
       float rot = tt * instances * .95;
-
-      
 
       pos.z += thick;
       pos.y -= 1.;
@@ -216,7 +214,7 @@ var drawTriangle = regl({
   uniforms: {
     proj: ({viewportWidth, viewportHeight}) =>
       mat4.perspective([],
-        Math.PI / 10,
+        Math.PI / 5,
         viewportWidth / viewportHeight,
         0.01,
         1000),
