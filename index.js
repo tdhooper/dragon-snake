@@ -173,18 +173,24 @@ var drawTriangle = regl({
         0, 0, 0, 1
       );
 
-      vec4 pos = vec4(position, 1);
+      float thick = pow(tt, 1.);
+      thick = smoothstep(0., .95, tt) - smoothstep(.95, 1., tt);
+
+
+      vec4 pos = vec4(position * mix(.5, 1., thick), 1);
 
       float rot = tt * instances * .95;
 
-      pos.z += 1.;
+      
+
+      pos.z += thick;
       pos.y -= 1.;
 
-      iRotationMat = rotateX(-.2) * rotateY(rot) * iRotationMat;
+      iRotationMat = rotateX(-.4 * thick) * rotateY(rot) * iRotationMat;
       pos = pos * iRotationMat;
 
       vNormal = (vec4(normal, 0) * iRotationMat).xyz;
-  
+
       pos = pos * iPositionMat;
       pos = proj * view * pos;
 
