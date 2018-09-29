@@ -1,7 +1,10 @@
+var GuidedCurveDecorator = require('./guided-curve');
+var GuidedCubicBezierCurve3 = GuidedCurveDecorator(THREE.CubicBezierCurve3);
+
 
 var CurveFactory = function(graph, radius) {
 
-  var createCurves = function(plan, startRadius, endRadius) {
+  var curveArgs = function(plan, startRadius, endRadius) {
     var curves = [];
     var startDepthScalar = startRadius / 13.3;
     var endDepthScalar = endRadius / 13.3
@@ -14,17 +17,15 @@ var CurveFactory = function(graph, radius) {
     var endDepth = plan.endDepth;
 
     var originalA = a.clone();
-    var a = a.lerp(new THREE.Vector3(), startDepthScalar * startDepth);
-    var b = b.lerp(new THREE.Vector3(), endDepthScalar * endDepth);
+    a = a.lerp(new THREE.Vector3(), startDepthScalar * startDepth);
+    b = b.lerp(new THREE.Vector3(), endDepthScalar * endDepth);
 
-    curves.push(new THREE.CubicBezierCurve3(
+    return [
       a,
       a.clone().add(ta.multiplyScalar(startRadius)),
       b.clone().add(tb.multiplyScalar(endRadius)),
       b
-    ));
-
-    return curves;
+    ];
   };
 
   var lastNode = graph.nodes()[Math.floor(Math.random() * graph.nodes().length)];
@@ -62,7 +63,7 @@ var CurveFactory = function(graph, radius) {
       a.x == b.x &&
       a.y == b.y &&
       a.z == b.z
-    )
+    );
 
     var startDepth = lastDepth;
     var endDepth = startDepth * -1;
@@ -79,24 +80,17 @@ var CurveFactory = function(graph, radius) {
       endVector: b,
       endTangent: tb,
       loop: loop,
-    }
+    };
   };
 
   var curveStack = [];
-  var guideStack = [];
   var variance = radius * 0.1;
   var lastRadius = radius + variance;
   var flip = 1;
 
   this.nextCurve = function() {
     if (curveStack.length > 0) {
-      var curve = curveStack.pop();
-      var guide = guideStack.pop();
-      return curve;
-      return {
-        curve: curve,
-        guide: guide
-      };
+      return curveStack.pop();
     }
 
     var plan = getPlan();
@@ -104,12 +98,16 @@ var CurveFactory = function(graph, radius) {
       flip *= -1;
     }
     var nextRadius = radius + variance * flip;
-    curveStack = curveStack.concat(createCurves(plan, radius, radius));
-    guideStack = guideStack.concat(createCurves(plan, lastRadius, nextRadius));
+    curveStack.push(
+      new GuidedCubicBezierCurve3(
+        curveArgs(plan, radius, radius),
+        curveArgs(plan, lastRadius, nextRadius)
+      )
+    );
     lastRadius = nextRadius;
 
     return this.nextCurve();
-  }
+  };
 };
 
 module.exports = CurveFactory;
