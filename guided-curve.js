@@ -1,19 +1,33 @@
 
-var GuidedCurveDecorator = function(Cls) {
+var GuidedCurvePath = function() {
+    THREE.CurvePath.call(this);
+    this.guideCurvePath = new THREE.CurvePath();
+};
 
-  var Decorated = function() {
-    var curveArgs = arguments[0];
-    Cls.apply(this, curveArgs);
+GuidedCurvePath.prototype = Object.create(THREE.CurvePath.prototype);
+GuidedCurvePath.prototype.constructor = GuidedCurvePath;
 
-    var guideCurveArgs = arguments[1];
-    this.guideCurve = new (Function.prototype.bind.apply(Cls, guideCurveArgs));
-  };
+GuidedCurvePath.prototype.add = function(curveAndGuide) {
+    this.curves.push(curveAndGuide[0]);
+    this.guideCurvePath.add(curveAndGuide[1]);
+};
 
-  Decorated.prototype = Object.create(Cls.prototype);
-  Decorated.prototype.constructor = Cls;
+GuidedCurvePath.prototype.getBasisAt = function(u) {
 
-  return Decorated;
+    var position = this.getPointAt(u);
+    var tangent = this.getTangentAt(u);
+
+    var guidePosition = this.guideCurvePath.getPointAt(u);
+    var normal = guidePosition.sub(position);
+
+    normal = normal.cross(tangent).normalize();
+
+    return {
+        position: position,
+        normal: normal,
+        tangent: tangent
+    };
 };
 
 
-module.exports = GuidedCurveDecorator;
+module.exports = GuidedCurvePath;

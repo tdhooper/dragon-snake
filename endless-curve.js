@@ -1,13 +1,16 @@
+var GuidedCurvePath = require('./guided-curve');
+
+
 var EndlessCurve = function(nextCurve) {
   this.distanceOffset = 0;
   this.nextCurve = nextCurve;
-  THREE.CurvePath.call(this);
+  GuidedCurvePath.call(this);
 };
 
-EndlessCurve.prototype = Object.create(THREE.CurvePath.prototype);
+EndlessCurve.prototype = Object.create(GuidedCurvePath.prototype);
 EndlessCurve.prototype.constructor = EndlessCurve;
 
-var parent = THREE.CurvePath.prototype;
+var parent = GuidedCurvePath.prototype;
 
 EndlessCurve.prototype.localDistance = function(globalDistance) {
   return globalDistance - this.distanceOffset;
@@ -97,19 +100,24 @@ EndlessCurve.prototype.configureStartEnd = function(position, length) {
   length = this.localDistance(length);
 
   var len = this.getLengthSafe();
-  this.frenetFramesStart = position / len;
-  this.frenetFramesLength = length / len;
+  this.uStart = position / len;
+  this.uLength = length / len;
 };
 
-EndlessCurve.prototype.getTangentAt = function(u) {
-  var u2 = this.frenetFramesStart + this.frenetFramesLength * u;
-  return parent.getTangentAt.call(this, u2);
+EndlessCurve.prototype.getBasisAt = function(u) {
+  var u2 = this.uStart + this.uLength * u;
+  return parent.getBasisAt.call(this, u2);
 };
 
-EndlessCurve.prototype.getPointAt = function(u) {
-  var u2 = this.frenetFramesStart + this.frenetFramesLength * u;
-  return parent.getPointAt.call(this, u2);
-};
+// EndlessCurve.prototype.getTangentAt = function(u) {
+//   var u2 = this.frenetFramesStart + this.frenetFramesLength * u;
+//   return parent.getTangentAt.call(this, u2);
+// };
+
+// EndlessCurve.prototype.getPointAt = function(u) {
+//   var u2 = this.frenetFramesStart + this.frenetFramesLength * u;
+//   return parent.getPointAt.call(this, u2);
+// };
 
 
 module.exports = EndlessCurve;

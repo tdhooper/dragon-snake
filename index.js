@@ -239,39 +239,65 @@ function draw(context) {
   distance = context.time * 5;
   curve.configureStartEnd(distance, len);
 
-  var curvePoints = [];
+  var position = [];
+  var normal = [];
+  var tangent = [];
+
   for (var i = 0; i < texturePoints; i++) {
-    var point = curve.getPointAt(i / texturePoints);
-    curvePoints.push(point);
+    var basis = curve.getBasisAt(i / texturePoints);
+    position = position.concat(
+      basis.position.x,
+      basis.position.y,
+      basis.position.z
+    );
+    normal = normal.concat(
+      basis.normal.x * .5 + .5,
+      basis.normal.y * .5 + .5,
+      basis.normal.z * .5 + .5
+    );
+    tangent = tangent.concat(
+      basis.tangent.x * .5 + .5,
+      basis.tangent.y * .5 + .5,
+      basis.tangent.z * .5 + .5
+    );
   }
 
-  var position = curvePoints.reduce(function(acc, v) {
-    return acc.concat(
-      v.x,
-      v.y,
-      v.z
-    );
-  }, []);
 
-  var frames = curve.computeFrenetFrames(texturePoints - 1);
 
-  // console.log(frames);
 
-  var normal = frames.normals.reduce(function(acc, v, i) {
-    return acc.concat(
-      v.x * .5 + .5,
-      v.y * .5 + .5,
-      v.z * .5 + .5
-    );
-  }, []);
+  // var curvePoints = [];
+  // for (var i = 0; i < texturePoints; i++) {
+  //   var point = curve.getPointAt(i / texturePoints);
+  //   curvePoints.push(point);
+  // }
 
-  var tangent = frames.tangents.reduce(function(acc, v, i) {
-    return acc.concat(
-      v.x * .5 + .5,
-      v.y * .5 + .5,
-      v.z * .5 + .5
-    );
-  }, []);
+  // var position = curvePoints.reduce(function(acc, v) {
+  //   return acc.concat(
+  //     v.x,
+  //     v.y,
+  //     v.z
+  //   );
+  // }, []);
+
+  // var frames = curve.computeFrenetFrames(texturePoints - 1);
+
+  // // console.log(frames);
+
+  // var normal = frames.normals.reduce(function(acc, v, i) {
+  //   return acc.concat(
+  //     v.x * .5 + .5,
+  //     v.y * .5 + .5,
+  //     v.z * .5 + .5
+  //   );
+  // }, []);
+
+  // var tangent = frames.tangents.reduce(function(acc, v, i) {
+  //   return acc.concat(
+  //     v.x * .5 + .5,
+  //     v.y * .5 + .5,
+  //     v.z * .5 + .5
+  //   );
+  // }, []);
 
   textureConf.data = position;
   positionTex(textureConf);
