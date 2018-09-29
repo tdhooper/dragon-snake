@@ -1,6 +1,7 @@
 global.THREE = require('three');
 var polyhedra = require('polyhedra');
 var Snake = require('./snake');
+var PolyFrame = require('./poly-frame');
 
 global.regl = require('regl')({
   extensions: [
@@ -17,6 +18,7 @@ camera.distance = 30;
 
 var poly = polyhedra.platonic.Icosahedron;
 var snake = new Snake(poly);
+var polyFrame = new PolyFrame(poly);
 
 var drawSetup = regl({
   uniforms: {
@@ -37,6 +39,7 @@ function draw(context) {
 
   drawSetup(function(context) {
     snake.draw(context);
+    polyFrame.draw(context);
   });
 }
 
