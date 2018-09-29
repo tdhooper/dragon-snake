@@ -3,7 +3,7 @@ var vec3 = require('gl-matrix').vec3;
 
 function PolyFrame(poly) {
 
-  capsule = createCapsule(.66, 2);
+  capsule = createCapsule(.05, 4.5);
 
   var positions = [];
   var normals = [];

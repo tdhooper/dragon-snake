@@ -14,9 +14,10 @@ var mat4 = require('gl-mat4');
 var createCamera = require('canvas-orbit-camera');
 
 var camera = createCamera(regl._gl.canvas);
-camera.distance = 30;
+camera.distance = 40;
 
 var poly = polyhedra.platonic.Icosahedron;
+poly = polyhedra.archimedean.TruncatedTetrahedron;
 var snake = new Snake(poly);
 var polyFrame = new PolyFrame(poly);
 

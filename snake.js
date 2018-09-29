@@ -9,7 +9,7 @@ function Snake(poly) {
 
   box = createCube(.5, 2.5, .25, 1, 1, 1);
 
-  var N = 500;
+  var N = 1000;
   var instances = Array(N).fill().map((_, i) => {
     return i;
   });
@@ -162,7 +162,7 @@ function Snake(poly) {
   });
 
   this.distance = 0;
-  this.len = 30;
+  this.len = 60;
 }
 
 Snake.prototype.draw = function(context) {
