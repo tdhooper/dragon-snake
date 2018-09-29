@@ -14,6 +14,7 @@
     "gl-mat4": "^1.2.0",
     "graphlib": "^2.1.5",
     "polyhedra": "^1.0.0",
+    "primitive-capsule": "^3.0.1",
     "primitive-cube": "github:vorg/primitive-cube",
     "regl": "^1.3.7",
     "three": "^0.88.0"
