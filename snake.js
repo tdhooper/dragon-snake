@@ -3,13 +3,20 @@ var CurveFactory = require('./curve-factory');
 var EndlessCurve = require('./endless-curve');
 
 var createCube = require('primitive-cube');
-
+var createSphere = require('primitive-icosphere');
+var vec3 = require('gl-matrix').vec3;
 
 function Snake(poly, length, speed, radius, handleScale) {
 
-  box = createCube(.5, 2.5, .25, 1, 1, 1);
+  // box = createCube(.5, 2.5, .25, 1, 1, 1);
+  box = createSphere(1);
+  box.positions.map(v => {
+    v[0] *= .5;
+    v[1] *= 2.;
+    v[2] *= .3;
+  });
 
-  var N = 1000;
+  var N = 750;
   var instances = Array(N).fill().map((_, i) => {
     return i;
   });
@@ -124,14 +131,13 @@ function Snake(poly, length, speed, radius, handleScale) {
         );
 
         float thick = pow(tt, 1.);
-        thick = smoothstep(0., .95, tt) - smoothstep(.95, 1., tt);
-
+        thick = smoothstep(0., .98, tt) - smoothstep(.98, 1., tt);
 
         vec4 pos = vec4(position * mix(.2, 1., thick), 1);
 
         float rot = tt * instances * .95;
 
-        pos.z += thick;
+        pos.z += thick * .8;
         pos.y -= 1.;
 
         iRotationMat = rotateX(-.4 * thick) * rotateY(rot) * iRotationMat;

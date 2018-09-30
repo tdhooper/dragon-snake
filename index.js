@@ -25,6 +25,7 @@ camera.rotation = quat.create();
 var poly = polyhedra.archimedean.TruncatedTetrahedron;
 poly = scalePoly(poly, 8);
 var snake = new Snake(poly, 60, 5, 3, 1/13.3);
+var snake2 = new Snake(poly, 40, 5, 3, 1/13.3);
 var polyFrame = new PolyFrame(poly);
 var debugCurve = new DebugCurve(snake.curve);
 
@@ -32,17 +33,12 @@ var modelZ = faceVector(poly, 7);
 var modelY = faceVector(poly, 4);
 var modelX = vec3.cross([], modelZ, modelY);
 vec3.cross(modelY, modelX, modelZ);
-
-vec3.scale(modelX, modelX, 8);
-vec3.scale(modelY, modelY, 8);
-vec3.scale(modelZ, modelZ, 8);
-
 var model = mat4FromBasis(modelX, modelY, modelZ);
 
-poly = polyhedra.archimedean.TruncatedIcosahedron;
-poly = scalePoly(poly, 30);
-var snake2 = new Snake(poly, 120, 10, 4, 1/60);
-var polyFrame2 = new PolyFrame(poly);
+// poly = polyhedra.archimedean.TruncatedIcosahedron;
+// poly = scalePoly(poly, 30);
+// var snake2 = new Snake(poly, 120, 10, 4, 1/60);
+// var polyFrame2 = new PolyFrame(poly);
 
 var debugPoint = new DebugPoint();
 
