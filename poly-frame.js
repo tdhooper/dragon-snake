@@ -46,6 +46,7 @@ function PolyFrame(poly) {
 
       uniform mat4 proj;
       uniform mat4 view;
+      uniform mat4 model;
       uniform float time;
 
       attribute vec3 position;
@@ -89,8 +90,7 @@ function PolyFrame(poly) {
         // pR(pos.xz, time);
         pos = pos * iRotationMat;
         pos = pos * iPositionMat;
-        pos = proj * view * pos;
-
+        pos = proj * view * model * pos;
         gl_Position = pos;
       }
     `,

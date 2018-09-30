@@ -37,8 +37,15 @@ function Snake(poly, length, speed, radius, handleScale) {
 
       varying vec3 vNormal;
 
+      void pR(inout vec2 p, float a) {
+          p = cos(a)*p + sin(a)*vec2(p.y, -p.x);
+      }
+
       void main() {
-        gl_FragColor = vec4(vNormal * .5 + .5, 1);
+        vec3 n = vNormal;
+        pR(n.xz, -.7);
+        pR(n.yz, -.5);
+        gl_FragColor = vec4(n * .5 + .5, 1);
       }
     `,
 
@@ -47,6 +54,7 @@ function Snake(poly, length, speed, radius, handleScale) {
 
       uniform mat4 proj;
       uniform mat4 view;
+      uniform mat4 model;
       uniform float instances;
       
       uniform sampler2D positionTex;
@@ -129,10 +137,10 @@ function Snake(poly, length, speed, radius, handleScale) {
         iRotationMat = rotateX(-.4 * thick) * rotateY(rot) * iRotationMat;
         pos = pos * iRotationMat;
 
-        vNormal = (vec4(normal, 0) * iRotationMat).xyz;
+        vNormal = (model * (vec4(normal, 0) * iRotationMat)).xyz;
 
         pos = pos * iPositionMat;
-        pos = proj * view * pos;
+        pos = proj * view * model * pos;
 
         gl_Position = pos;
       }

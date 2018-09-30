@@ -1,3 +1,5 @@
+var idString = require('./id-string');
+
 
 function DebugCurve(curve) {
 
@@ -58,21 +60,11 @@ function DebugCurve(curve) {
   });
 }
 
-DebugCurve.prototype.hashString = function(str) {
-  var hash = 0, i;
-  for (i in str) {
-    hash = ((hash << 5) - hash) + str.charCodeAt(i);
-    hash |= 0;
-  }
-  return hash;
-}
-
 DebugCurve.prototype.curveToId = function(curve) {
   var id = ['v0', 'v1', 'v2', 'v3'].reduce((acc, attr) => {
     return acc += curve[attr].toArray().toString()
   }, '');
-  id = this.hashString(id);
-  id = (id % 255) / 255;
+  id = this.idString(id);
   return id;
 }
 
