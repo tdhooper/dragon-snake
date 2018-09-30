@@ -2,6 +2,7 @@ global.THREE = require('three');
 var polyhedra = require('polyhedra');
 var Snake = require('./snake');
 var PolyFrame = require('./poly-frame');
+var DebugCurve = require('./debug-curve');
 
 global.regl = require('regl')({
   extensions: [
@@ -20,6 +21,7 @@ var poly = polyhedra.platonic.Icosahedron;
 poly = polyhedra.archimedean.TruncatedTetrahedron;
 var snake = new Snake(poly);
 var polyFrame = new PolyFrame(poly);
+var debugCurve = new DebugCurve(snake.curve);
 
 var drawSetup = regl({
   uniforms: {
@@ -41,6 +43,7 @@ function draw(context) {
   drawSetup(function(context) {
     snake.draw(context);
     polyFrame.draw(context);
+    debugCurve.draw(context);
   });
 }
 
