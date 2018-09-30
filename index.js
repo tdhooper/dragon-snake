@@ -17,11 +17,19 @@ var createCamera = require('canvas-orbit-camera');
 var camera = createCamera(regl._gl.canvas);
 camera.distance = 40;
 
-var poly = polyhedra.platonic.Icosahedron;
-poly = polyhedra.archimedean.TruncatedTetrahedron;
-var snake = new Snake(poly);
+
+var poly = polyhedra.archimedean.TruncatedTetrahedron;
+poly = scalePoly(poly, 8);
+var snake = new Snake(poly, 60, 5, 3, 1/13.3);
 var polyFrame = new PolyFrame(poly);
 var debugCurve = new DebugCurve(snake.curve);
+
+
+poly = polyhedra.archimedean.TruncatedIcosahedron;
+poly = scalePoly(poly, 30);
+var snake2 = new Snake(poly, 120, 10, 4, 1/60);
+var polyFrame2 = new PolyFrame(poly);
+
 
 var drawSetup = regl({
   uniforms: {
@@ -43,7 +51,11 @@ function draw(context) {
   drawSetup(function(context) {
     snake.draw(context);
     polyFrame.draw(context);
-    debugCurve.draw(context);
+
+    snake2.draw(context);
+    // polyFrame2.draw(context);
+
+    // debugCurve.draw(context);
   });
 }
 
@@ -52,3 +64,13 @@ regl.frame(draw);
 //   time: 0
 // });
 
+function scalePoly(poly, scale) {
+  var newPoly = Object.assign({}, poly);
+  newPoly.vertex = poly.vertex.map(v => {
+    v[0] *= scale;
+    v[1] *= scale;
+    v[2] *= scale;
+    return v;
+  });
+  return newPoly;
+}

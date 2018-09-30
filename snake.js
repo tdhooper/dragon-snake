@@ -5,7 +5,7 @@ var EndlessCurve = require('./endless-curve');
 var createCube = require('primitive-cube');
 
 
-function Snake(poly) {
+function Snake(poly, length, speed, radius, handleScale) {
 
   box = createCube(.5, 2.5, .25, 1, 1, 1);
 
@@ -27,7 +27,7 @@ function Snake(poly) {
   this.tangentTex = regl.texture(this.textureConf);
 
   var graph = createGraph(poly);
-  var curveFactory = new CurveFactory(graph, 3);
+  var curveFactory = new CurveFactory(graph, radius, handleScale);
 
   this.curve = new EndlessCurve(curveFactory.nextCurve);
 
@@ -162,12 +162,13 @@ function Snake(poly) {
   });
 
   this.distance = 0;
-  this.len = 60;
+  this.len = length;
+  this.speed = speed;
 }
 
 Snake.prototype.draw = function(context) {
 
-  this.distance = context.time * 5;
+  this.distance = context.time * this.speed;
   this.curve.configureStartEnd(this.distance, this.len);
 
   var position = [];

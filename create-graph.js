@@ -7,9 +7,6 @@ module.exports = function(poly) {
     var vertA = new THREE.Vector3().fromArray(poly.vertex[a]);
     var vertB = new THREE.Vector3().fromArray(poly.vertex[b]);
 
-    vertA.multiplyScalar(8);
-    vertB.multiplyScalar(8);
-
     var vec = new THREE.Vector3().lerpVectors(
       vertA,
       vertB,

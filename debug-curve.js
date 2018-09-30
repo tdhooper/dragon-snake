@@ -89,6 +89,8 @@ DebugCurve.prototype.curveToPoints = function(curve, lines) {
 
 DebugCurve.prototype.draw = function(context) {
 
+  // return;
+
   var lines = 50;
 
   this.curve.curves.forEach(curve => {

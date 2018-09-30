@@ -1,10 +1,10 @@
 
-var CurveFactory = function(graph, radius) {
+var CurveFactory = function(graph, radius, handleScale) {
 
   var createCurve = function(plan, startRadius, endRadius) {
     var curves = [];
-    var startDepthScalar = startRadius / 13.3;
-    var endDepthScalar = endRadius / 13.3
+    var startDepthScalar = startRadius * handleScale;
+    var endDepthScalar = endRadius * handleScale;
     var a = plan.startVector.clone();
     var b = plan.endVector.clone();
     var ta = plan.startTangent.clone();
