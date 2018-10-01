@@ -15,6 +15,12 @@ function Snake(poly, length, speed, radius, handleScale) {
     v[1] *= 2.;
     v[2] *= .3;
   });
+  box.normals.map(v => {
+    v[0] /= .5;
+    v[1] /= 2.;
+    v[2] /= .3;
+    vec3.normalize(v, v);
+  });
 
   var N = 750;
   var instances = Array(N).fill().map((_, i) => {
