@@ -54,12 +54,17 @@ var drawSetup = regl({
     view: () => {
       return camera.view();
     },
-    model: model
+    model: () => {
+      return model
+    }
   }
 });
 
 function draw(context) {
   camera.tick();
+
+  mat4.rotate(model, model, .005, modelX);
+  // mat4.rotate(model, model, .0025, modelY);
 
   drawSetup(function(context) {
     snake.draw(context);
