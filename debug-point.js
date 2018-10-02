@@ -22,7 +22,7 @@ function DebugPoint() {
       }
 
       void main() {
-        gl_FragColor = vec4(spectrum(id) * .5 + .5, 1);
+        gl_FragColor = vec4(spectrum(id), 1);
       }
     `,
 
@@ -32,13 +32,14 @@ function DebugPoint() {
       uniform mat4 proj;
       uniform mat4 view;
       uniform mat4 model;
+      uniform mat4 iModel;
 
       attribute vec3 position;
       attribute vec3 normal;
 
       void main () {
         vec4 pos = vec4(position.zxy, 1);
-        pos = proj * view * model * pos;
+        pos = proj * view * model * iModel * pos;
         gl_Position = pos;
       }
     `,
@@ -52,7 +53,7 @@ function DebugPoint() {
       id: function(props, context) {
         return context.id;
       },
-      model: function(props, context) {
+      iModel: function(props, context) {
         var m = mat4.fromTranslation([], context.position);
         return m;
       }
@@ -64,10 +65,13 @@ function DebugPoint() {
   });
 }
 
-DebugPoint.prototype.draw = function(position) {
+DebugPoint.prototype.draw = function(position, id) {
+  if (id == undefined) {
+    id = idString(position.toString());
+  }
   this.drawPoint({
     position: position,
-    id: idString(position.toString())
+    id: id
   });
 }
 

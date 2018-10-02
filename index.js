@@ -70,6 +70,11 @@ function draw(context) {
     snake.draw(context);
     polyFrame.draw(context);
 
+    // poly.vertex.forEach((v, i) => {
+    //   var id = (i / poly.vertex.length) * .75;
+    //   debugPoint.draw(v, id);
+    // });
+
     // debugPoint.draw(modelX);
     // debugPoint.draw(modelY);
     // debugPoint.draw(modelZ);
