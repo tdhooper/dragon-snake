@@ -1,0 +1,11 @@
+body {
+  margin: 0;
+  height: 100%;
+  background: rgb(50,30,90);
+}
+
+canvas {
+  height: 100%;
+  width: 100%;
+  display: block;
+}
