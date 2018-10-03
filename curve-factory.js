@@ -1,3 +1,51 @@
+var shuffle = require('shuffle-array');
+
+
+var addOccupied = function(occupied, node) {
+  occupied = occupied.slice(1);
+  occupied.push(node);
+  return occupied;
+};
+
+var filterEmpty = function(occupied, node) {
+  return occupied.indexOf(node) === -1;
+};
+
+var getDepth = function(graph, node, occupied, depth, iterations) {
+  depth += 1;
+  if (iterations === 0) {
+    return depth;
+  }
+  nextNodes = graph.successors(node);
+  nextNodes = nextNodes.filter(
+    filterEmpty.bind(this, occupied)
+  );
+  var nextDepth = 0;
+  for (var i = 0; i < nextNodes.length; i++) {
+    var nextNode = nextNodes[i];
+    var nextOccupied = addOccupied(occupied, nextNode);
+    nextDepth = Math.max(
+      nextDepth,
+      getDepth(graph, nextNode, nextOccupied, depth, iterations-1)
+    );
+  }
+  return depth + nextDepth;
+};
+
+var getNextNode = function(graph, node, occupied) {
+  nextNodes = graph.successors(node);
+  nextNodes = nextNodes.filter(
+    filterEmpty.bind(this, occupied)
+  );
+  nextNodes = shuffle(nextNodes);
+  for (var i = 0; i < nextNodes.length; i++) {
+    var nextNode = nextNodes[i];
+    var nextOccupied = addOccupied(occupied, nextNode);
+    if (getDepth(graph, nextNode, nextOccupied, 0, 3) > 2) {
+      return nextNode;
+    }
+  }
+};
 
 var CurveFactory = function(graph, radius, handleScale) {
 
@@ -31,19 +79,11 @@ var CurveFactory = function(graph, radius, handleScale) {
   var occupiedFaces = [];
 
   var getPlan = function() {
-    var nodes = graph.successors(lastNode);
-    emptyNodes = nodes.filter(function(node) {
-      return occupiedFaces.indexOf(node) === -1;
-    });
-    if (emptyNodes.length) {
-      nodes = emptyNodes;
-    }
 
-    var node = nodes[Math.floor(Math.random() * nodes.length)];
+    var node = getNextNode(graph, lastNode, occupiedFaces);
     var edge = graph.edge(lastNode, node);
 
-    occupiedFaces.push(node);
-    occupiedFaces = occupiedFaces.slice(-8);
+    addOccupied(occupiedFaces, node);
 
     if (lastEdge === undefined) {
       lastNode = node;
