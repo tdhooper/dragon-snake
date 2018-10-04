@@ -4,7 +4,7 @@ var shuffle = require('shuffle-array');
 var CurveFactory = function(graph, radius, handleScale) {
 
   var addOccupied = function(occupied, node) {
-    occupied = occupied.slice(1);
+    occupied = occupied.slice(-8);
     occupied.push(node);
     return occupied;
   };
@@ -47,6 +47,7 @@ var CurveFactory = function(graph, radius, handleScale) {
         return nextNode;
       }
     }
+
   };
 
   var createCurve = function(plan, startRadius, endRadius) {
@@ -83,7 +84,7 @@ var CurveFactory = function(graph, radius, handleScale) {
     var node = getNextNode(lastNode, occupiedFaces);
     var edge = graph.edge(lastNode, node);
 
-    addOccupied(occupiedFaces, node);
+    occupiedFaces = addOccupied(occupiedFaces, node);
 
     if (lastEdge === undefined) {
       lastNode = node;
