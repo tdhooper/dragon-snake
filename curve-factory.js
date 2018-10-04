@@ -31,7 +31,7 @@ var CurveFactory = function(graph, radius, handleScale) {
         getDepth(nextNode, nextOccupied, depth, iterations-1)
       );
     }
-    return depth + nextDepth;
+    return nextDepth;
   };
 
   var getNextNode = function(node, occupied) {
@@ -40,13 +40,15 @@ var CurveFactory = function(graph, radius, handleScale) {
       filterEmpty.bind(this, occupied)
     );
     nextNodes = shuffle(nextNodes);
-    for (var i = 0; i < nextNodes.length; i++) {
-      var nextNode = nextNodes[i];
+    var nodeDepths = nextNodes.map(nextNode => {
       var nextOccupied = addOccupied(occupied, nextNode);
-      if (getDepth(nextNode, nextOccupied, 0, 3) > 2) {
-        return nextNode;
-      }
-    }
+      var depth = getDepth(nextNode, nextOccupied, 0, 2);
+      return [nextNode, depth];
+    });
+    nodeDepths.sort((a, b) => {
+      return b[1] - a[1];
+    });
+    return nodeDepths[0][0];
   };
 
   var createCurve = function(plan, startRadius, endRadius) {
