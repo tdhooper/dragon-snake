@@ -18,7 +18,7 @@ var CurveFactory = function(graph, radius, handleScale) {
     if (iterations === 0) {
       return depth;
     }
-    nextNodes = graph.successors(node);
+    var nextNodes = graph.successors(node);
     nextNodes = nextNodes.filter(
       filterEmpty.bind(this, occupied)
     );
@@ -35,7 +35,7 @@ var CurveFactory = function(graph, radius, handleScale) {
   };
 
   var getNextNode = function(node, occupied) {
-    nextNodes = graph.successors(node);
+    var nextNodes = graph.successors(node);
     nextNodes = nextNodes.filter(
       filterEmpty.bind(this, occupied)
     );
@@ -47,7 +47,6 @@ var CurveFactory = function(graph, radius, handleScale) {
         return nextNode;
       }
     }
-
   };
 
   var createCurve = function(plan, startRadius, endRadius) {
