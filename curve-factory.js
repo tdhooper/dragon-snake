@@ -1,53 +1,53 @@
 var shuffle = require('shuffle-array');
 
 
-var addOccupied = function(occupied, node) {
-  occupied = occupied.slice(1);
-  occupied.push(node);
-  return occupied;
-};
-
-var filterEmpty = function(occupied, node) {
-  return occupied.indexOf(node) === -1;
-};
-
-var getDepth = function(graph, node, occupied, depth, iterations) {
-  depth += 1;
-  if (iterations === 0) {
-    return depth;
-  }
-  nextNodes = graph.successors(node);
-  nextNodes = nextNodes.filter(
-    filterEmpty.bind(this, occupied)
-  );
-  var nextDepth = 0;
-  for (var i = 0; i < nextNodes.length; i++) {
-    var nextNode = nextNodes[i];
-    var nextOccupied = addOccupied(occupied, nextNode);
-    nextDepth = Math.max(
-      nextDepth,
-      getDepth(graph, nextNode, nextOccupied, depth, iterations-1)
-    );
-  }
-  return depth + nextDepth;
-};
-
-var getNextNode = function(graph, node, occupied) {
-  nextNodes = graph.successors(node);
-  nextNodes = nextNodes.filter(
-    filterEmpty.bind(this, occupied)
-  );
-  nextNodes = shuffle(nextNodes);
-  for (var i = 0; i < nextNodes.length; i++) {
-    var nextNode = nextNodes[i];
-    var nextOccupied = addOccupied(occupied, nextNode);
-    if (getDepth(graph, nextNode, nextOccupied, 0, 3) > 2) {
-      return nextNode;
-    }
-  }
-};
-
 var CurveFactory = function(graph, radius, handleScale) {
+
+  var addOccupied = function(occupied, node) {
+    occupied = occupied.slice(1);
+    occupied.push(node);
+    return occupied;
+  };
+
+  var filterEmpty = function(occupied, node) {
+    return occupied.indexOf(node) === -1;
+  };
+
+  var getDepth = function(node, occupied, depth, iterations) {
+    depth += 1;
+    if (iterations === 0) {
+      return depth;
+    }
+    nextNodes = graph.successors(node);
+    nextNodes = nextNodes.filter(
+      filterEmpty.bind(this, occupied)
+    );
+    var nextDepth = 0;
+    for (var i = 0; i < nextNodes.length; i++) {
+      var nextNode = nextNodes[i];
+      var nextOccupied = addOccupied(occupied, nextNode);
+      nextDepth = Math.max(
+        nextDepth,
+        getDepth(nextNode, nextOccupied, depth, iterations-1)
+      );
+    }
+    return depth + nextDepth;
+  };
+
+  var getNextNode = function(node, occupied) {
+    nextNodes = graph.successors(node);
+    nextNodes = nextNodes.filter(
+      filterEmpty.bind(this, occupied)
+    );
+    nextNodes = shuffle(nextNodes);
+    for (var i = 0; i < nextNodes.length; i++) {
+      var nextNode = nextNodes[i];
+      var nextOccupied = addOccupied(occupied, nextNode);
+      if (getDepth(nextNode, nextOccupied, 0, 3) > 2) {
+        return nextNode;
+      }
+    }
+  };
 
   var createCurve = function(plan, startRadius, endRadius) {
     var curves = [];
@@ -80,7 +80,7 @@ var CurveFactory = function(graph, radius, handleScale) {
 
   var getPlan = function() {
 
-    var node = getNextNode(graph, lastNode, occupiedFaces);
+    var node = getNextNode(lastNode, occupiedFaces);
     var edge = graph.edge(lastNode, node);
 
     addOccupied(occupiedFaces, node);
