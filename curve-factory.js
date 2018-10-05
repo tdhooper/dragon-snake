@@ -36,11 +36,14 @@ var CurveFactory = function(graph, radius, handleScale) {
 
   var getNextNode = function(node, occupied) {
     var nextNodes = graph.successors(node);
-    nextNodes = nextNodes.filter(
+    nextNodes = shuffle(nextNodes);
+    var emptyNodes = nextNodes.filter(
       filterEmpty.bind(this, occupied)
     );
-    nextNodes = shuffle(nextNodes);
-    var nodeDepths = nextNodes.map(nextNode => {
+    if ( ! emptyNodes.length) {
+      return nextNodes[0];
+    }
+    var nodeDepths = emptyNodes.map(nextNode => {
       var nextOccupied = addOccupied(occupied, nextNode);
       var depth = getDepth(nextNode, nextOccupied, 0, 2);
       return [nextNode, depth];
