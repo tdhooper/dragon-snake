@@ -7,8 +7,8 @@ function Environment() {
   var geometry = this.createGeometry();
   var positions = [];
 
-  var w = 11;
-  var h = 14;
+  var w = 19;
+  var h = 18;
   var scaleW = 1.73;
   var scaleH = scaleW * .865;
   var offset = scaleW / 2;
@@ -23,15 +23,10 @@ function Environment() {
     }
   }
 
-  // var model = mat4.fromZRotation([], Math.PI/2);
-  // var model = mat4.fromTranslation([], [0,0,0]);
-  var model = mat4.identity([]);
-
-  mat4.rotateZ(model, model, Math.PI / 2);
-
-  mat4.rotateY(model, model, -.5);
-  mat4.rotateX(model, model, Math.PI / 2);
-  mat4.translate(model, model, [20,0,0]);
+  // var model = mat4.fromXRotation([], Math.PI / -10);
+  var model = mat4.fromTranslation([], [0,0,-15]);
+  
+  // mat4.translate(model, model, [0,10,-15]);
 
   this.drawHexagons = regl({
     frag: `
@@ -39,17 +34,12 @@ function Environment() {
 
       uniform float id;
       varying vec3 vNormal;
-      varying vec3 vPos;
 
       void main() {
-        if (vPos.z > 0.) {
-          // discard;
-          // return;
-        }
         float c = .1;
         // col += pow(dot(vec3(1,0,1), vNormal) * .5 + .5, 5.) * vec3(0,.5,1);
         // col += pow(dot(vec3(-1,0,1), vNormal) * .5 + .5, 5.) * vec3(0,1,.5);
-        c += pow(dot(vec3(-.3,1,.5), vNormal) * .5 + .5, 5.) * .1;
+        c += pow(dot(vec3(-1,1,1), vNormal) * .5 + .5, 5.) * .05;
         vec3 col = mix(vec3(50,30,90)/255./2., vec3(1,0,2), c);
         col = vec3(c);
         gl_FragColor = vec4(col, 1);
@@ -70,13 +60,6 @@ function Environment() {
       attribute vec3 iPosition;
 
       varying vec3 vNormal;
-      varying vec3 vPos;
-
-      const float PI = 3.141592653589793;
-
-      void pR(inout vec2 p, float a) {
-          p = cos(a)*p + sin(a)*vec2(p.y, -p.x);
-      }
 
       void main () {
         vNormal = normal;
@@ -85,45 +68,27 @@ function Environment() {
         // pos.x *= .75;
         pos.xyz += iPosition;
 
+        // pos.xy *= 4.;
+
         float r;
 
         r = length(pos.xy);
-        pos.xy *= mix(1., r * .2, .25);
+        pos.xy *= mix(1., r * .2, .5);
 
         r = length(pos.xy);
         r = pow(r, .5) * 5.;
-        r = (sin(r - time * 1.) * .5 + .5);
-        r *= .15;
+        r = (sin(r - time * 3.) * .5 + .5);
+        r *= .2;
         r += 1.;
-        pos.xy *= r;
-
-        // pos.xy *= .05;
+        pos.xy *= r * 4.;
 
         float d = length(iPosition.xy);
         d = pow(d, .5);
-        d = (sin(d * 12. - time * 3.) * .5 + .5);
+        d = (sin(d * 12. - time * 2.) * .5 + .5);
         d *= .2;
-        pos.z -= d * 30.;
+        pos.z -= d * 60.;
 
-        pR(pos.xy, time/3.);
-
-        pos.xy *= .1;
-        pos.xy += vec2(PI / 2.,0);
-        pos.z -= 30.;
-
-        vec3 spos = vec3(
-          pos.z * sin(pos.x) * cos(pos.y),
-          pos.z * sin(pos.x) * sin(pos.y),
-          pos.z * cos(pos.x)
-        );
-
-        pos = vec4(spos, 1.);
-        pos = model * pos;
-
-        vPos = pos.xyz;
-
-        pos = proj * view * pos;
-
+        pos = proj * view * model * pos;
         gl_Position = pos;
       }
     `,
@@ -148,10 +113,10 @@ function Environment() {
 
     instances: positions.length,
 
-    cull: {
-      enable: true,
-      face: 'back'
-    },
+    // cull: {
+    //   enable: true,
+    //   face: 'back'
+    // },
   });
 }
 
@@ -159,7 +124,7 @@ Environment.prototype.createGeometry = function() {
   var segments = 3;
   var faces = 6;
 
-  var tGeometry = new THREE.CylinderGeometry(1, 1, 50, faces, segments);
+  var tGeometry = new THREE.CylinderGeometry(1, 1, 100, faces, segments);
 
   tGeometry.vertices.forEach((v, i) => {
     var ring = Math.floor(i / faces);
