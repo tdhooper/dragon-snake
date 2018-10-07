@@ -25,7 +25,7 @@ function Environment() {
 
   // var model = mat4.fromXRotation([], Math.PI / -10);
   var model = mat4.fromTranslation([], [0,0,-15]);
-  
+
   // mat4.translate(model, model, [0,10,-15]);
 
   this.drawHexagons = regl({
@@ -39,7 +39,7 @@ function Environment() {
         float c = .1;
         // col += pow(dot(vec3(1,0,1), vNormal) * .5 + .5, 5.) * vec3(0,.5,1);
         // col += pow(dot(vec3(-1,0,1), vNormal) * .5 + .5, 5.) * vec3(0,1,.5);
-        c += pow(dot(vec3(-1,1,1), vNormal) * .5 + .5, 5.) * .05;
+        c += pow(dot(vec3(.5,1,-.5), vNormal) * .5 + .5, 5.) * .1;
         vec3 col = mix(vec3(50,30,90)/255./2., vec3(1,0,2), c);
         col = vec3(c);
         gl_FragColor = vec4(col, 1);
@@ -80,7 +80,7 @@ function Environment() {
         r = (sin(r - time * 3.) * .5 + .5);
         r *= .2;
         r += 1.;
-        pos.xy *= r * 4.;
+        pos.xy *= r * 3.;
 
         float d = length(iPosition.xy);
         d = pow(d, .5);
@@ -121,28 +121,33 @@ function Environment() {
 }
 
 Environment.prototype.createGeometry = function() {
-  var segments = 3;
+  var segments = 4;
   var faces = 6;
 
   var tGeometry = new THREE.CylinderGeometry(1, 1, 100, faces, segments);
 
   tGeometry.vertices.forEach((v, i) => {
     var ring = Math.floor(i / faces);
+    if (i == faces * (segments + 1)) {
+      v.y = 0;
+    }
     if (ring == 0) {
-      v.x *= .33;
-      v.z *= .33;
+      v.x *= .7;
+      v.z *= .7;
       v.y = 0;
     }
     if (ring == 1) {
-      v.x *= .66;
-      v.z *= .66;
+      v.x *= .8;
+      v.z *= .8;
       v.y = .1;
     }
     if (ring == 2) {
-      v.y = 0;
-    }
-    if (i == faces * (segments + 1)) {
+      v.x *= .9;
+      v.z *= .9;
       v.y = .1;
+    }
+    if (ring == 3) {
+      v.y = 0;
     }
   });
 

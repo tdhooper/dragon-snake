@@ -69,7 +69,7 @@ function draw(context) {
   // mat4.rotate(model, model, .0025, modelY);
 
   drawSetup(function(context) {
-    snake.draw(context);
+    // snake.draw(context);
     polyFrame.draw(context);
     environment.draw();
 
@@ -89,10 +89,10 @@ function draw(context) {
   });
 }
 
-regl.frame(draw);
-// draw({
-//   time: 0
-// });
+// regl.frame(draw);
+draw({
+  time: 0
+});
 
 function scalePoly(poly, scale) {
   var newPoly = Object.assign({}, poly);
