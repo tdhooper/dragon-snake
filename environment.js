@@ -122,32 +122,36 @@ function Environment() {
 }
 
 Environment.prototype.createGeometry = function() {
-  var segments = 4;
+  var segments = 5;
   var faces = 6;
 
   var tGeometry = new THREE.CylinderGeometry(1, 1, 100, faces, segments);
 
   tGeometry.vertices.forEach((v, i) => {
-    var ring = Math.floor(i / faces);
     if (i == faces * (segments + 1)) {
-      v.y = 0;
+      v.y = -.05;
     }
-    if (ring == 0) {
-      v.x *= .7;
-      v.z *= .7;
-      v.y = 0;
+    var r = 0;
+    var ring = Math.floor(i / faces);
+    if (ring == r++) {
+      v.x *= .2;
+      v.z *= .2;
+      v.y = -.05;
     }
-    if (ring == 1) {
-      v.x *= .8;
-      v.z *= .8;
+    if (ring == r++) {
+      v.x *= .75;
+      v.z *= .75;
       v.y = .1;
     }
-    if (ring == 2) {
+    if (ring == r++) {
       v.x *= .9;
       v.z *= .9;
       v.y = .1;
     }
-    if (ring == 3) {
+    if (ring == r++) {
+      v.y = 0;
+    }
+    if (ring == r++) {
       v.y = 0;
     }
   });
