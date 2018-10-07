@@ -32,9 +32,12 @@ function Environment() {
     frag: `
       precision mediump float;
 
+      uniform float time;
+
       uniform float id;
       varying vec3 vNormal;
       varying vec2 vUv;
+      varying float vD;
 
       void main() {
         float c = .1;
@@ -44,7 +47,13 @@ function Environment() {
         vec3 col = mix(vec3(50,30,90)/255./2., vec3(1,0,2), c);
         col = vec3(c);
 
-        col.xy = vUv;
+        float ring = floor(vD * 5. - time * 2.);
+        ring = mod(ring, 5.);
+
+        if (vUv.y == ring) {
+          col = vec3(.2,.8,.5) * c * 5.;
+        }
+        // col.rg = vUv/5.;
 
         gl_FragColor = vec4(col, 1);
       }
@@ -66,6 +75,7 @@ function Environment() {
 
       varying vec3 vNormal;
       varying vec2 vUv;
+      varying float vD;
 
       void main () {
         vNormal = normal;
@@ -95,6 +105,8 @@ function Environment() {
         d += (sin(d * 12. - time * 2.) * .5 + .5);
         d *= .2;
         pos.z -= d * 60.;
+
+        vD = d;
 
         pos = proj * view * model * pos;
         gl_Position = pos;
