@@ -25,10 +25,6 @@ function PolyFrame(poly) {
     tangents = tangents.concat(tangent);
   }
 
-  console.log(tangents.length, normals.length, positions.length)
-
-  console.log(poly);
-
   this.drawPoly = regl({
     frag: `
       precision mediump float;
