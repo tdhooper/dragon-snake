@@ -84,7 +84,8 @@ function Environment() {
 
         float d = length(iPosition.xy);
         d = pow(d, .5);
-        d = (sin(d * 12. - time * 2.) * .5 + .5);
+        d = (sin(d * 30. - time * 1.) * .5 + .5);
+        d += (sin(d * 12. - time * 2.) * .5 + .5);
         d *= .2;
         pos.z -= d * 60.;
 
