@@ -34,6 +34,7 @@ function Environment() {
 
       uniform float id;
       varying vec3 vNormal;
+      varying vec2 vUv;
 
       void main() {
         float c = .1;
@@ -42,6 +43,9 @@ function Environment() {
         c += pow(dot(vec3(.5,1,-.5), vNormal) * .5 + .5, 5.) * .1;
         vec3 col = mix(vec3(50,30,90)/255./2., vec3(1,0,2), c);
         col = vec3(c);
+
+        col.xy = vUv;
+
         gl_FragColor = vec4(col, 1);
       }
     `,
@@ -56,13 +60,16 @@ function Environment() {
 
       attribute vec3 position;
       attribute vec3 normal;
+      attribute vec2 uv;
 
       attribute vec3 iPosition;
 
       varying vec3 vNormal;
+      varying vec2 vUv;
 
       void main () {
         vNormal = normal;
+        vUv = uv;
 
         vec4 pos = vec4(position.zxy, 1);
         // pos.x *= .75;
@@ -97,6 +104,7 @@ function Environment() {
     attributes: {
       position: geometry.positions,
       normal: geometry.normals,
+      uv: geometry.uvs,
       iPosition: {
         buffer: positions,
         divisor: 1
@@ -122,7 +130,7 @@ function Environment() {
 }
 
 Environment.prototype.createGeometry = function() {
-  var segments = 5;
+  var segments = 4;
   var faces = 6;
 
   var tGeometry = new THREE.CylinderGeometry(1, 1, 100, faces, segments);
@@ -151,13 +159,25 @@ Environment.prototype.createGeometry = function() {
     if (ring == r++) {
       v.y = 0;
     }
-    if (ring == r++) {
-      v.y = 0;
-    }
   });
 
   tGeometry.computeFlatVertexNormals();
   var geometry = fromThree(tGeometry);
+
+  geometry.uvs = geometry.positions.map((_, i) => {
+    var ring = Math.floor(i / faces) % segments;
+    var face = Math.floor(i / (segments * faces));
+    var u = face;
+    var v = ring + 1;
+    if (i >= segments * faces * 6) {
+      u = Math.floor((i - segments * faces * 6) / 3);
+      v = 0;
+    }
+    // u /= faces - 1;
+    // v /= segments - 1;
+    return [0, v];
+  });
+
   return geometry;
 }
 
