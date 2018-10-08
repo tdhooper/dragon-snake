@@ -7,8 +7,8 @@ function Environment() {
   var geometry = this.createGeometry();
   var positions = [];
 
-  var w = 19;
-  var h = 42;
+  var w = 20;
+  var h = 30;
   var scaleW = 1.73;
   var scaleH = scaleW * .865;
   var offset = scaleW / 2;
@@ -24,7 +24,7 @@ function Environment() {
   }
 
   // var model = mat4.fromXRotation([], Math.PI / -10);
-  var model = mat4.fromTranslation([], [0,0,-15]);
+  var model = mat4.fromTranslation([], [0,0,0]);
 
   // mat4.translate(model, model, [0,10,-15]);
 
@@ -52,8 +52,8 @@ function Environment() {
         vec3 col = mix(vec3(50,30,90)/255./2., vec3(1,0,2), c);
         col = vec3(c);
 
-        float r = length(viPosition.xy) / 10.;
-        float rr = floor(r * 50.) / 50.;
+        float r = abs(viPosition.y);
+        float rr = floor(r * 10.) / 10.;
         float ring = floor(rand(rr) * 4. - time);
         ring = mod(ring, 4.);
 
@@ -64,7 +64,7 @@ function Environment() {
         if (ring > 0.) {
           ring += 1.;
         }
-        if (vUv.y == ring && r > .4 && abs(viPosition.y) < 2.) {
+        if (vUv.y == ring && r > .4) {
           // col = vec3(1) * c * 5.;
           col = vec3(.2,.8,.5) * c * 5.;
         }
@@ -96,6 +96,8 @@ function Environment() {
       varying float vD;
       varying vec3 viPosition;
 
+      const float PI = 3.141592653589793;
+
       void main () {
         vNormal = normal;
         vUv = uv;
@@ -110,21 +112,33 @@ function Environment() {
         float r;
 
         r = length(pos.xy);
-        pos.xy /= mix(1., r * .2, .3);
+        // pos.xy /= mix(1., r * .2, .3);
 
-        r = length(pos.xy);
-        r = pow(r, .5) * 2.5;
-        r = (sin(r - time * 1.5) * .5 + .5);
-        r *= .3;
+        r = pos.x;
+        r = pow(r, .5) * 5.;
+        r = (sin(r - time * 2.5) * .5 + .5);
+        r *= .1;
         r += 1.;
-        pos.xy *= r * 5.;
+        pos.x *= r * 2.;
 
-        float d = length(iPosition.xy);
+        float d = iPosition.x;
         d = pow(d, .5);
         d = (sin(d * 30. - time * 1.) * .5 + .5);
         d += (sin(d * 12. - time * 2.) * .5 + .5) * .5;
         d *= .2;
-        pos.z -= d * 30.;
+        // pos.z -= d * 30.;
+
+        pos.z -= 20.;
+        pos.y /= ${w}. * ${scaleW} / (PI * 2.);
+        pos.x -= (${h}. * ${scaleH}) / 2.;
+        pos.x *= 10.;
+        pos.x += 40.;
+
+        pos.xyz = vec3(
+          pos.z * cos(pos.y),
+          pos.z * sin(pos.y),
+          pos.x
+        );
 
         vD = d;
 
@@ -165,7 +179,7 @@ Environment.prototype.createGeometry = function() {
   var segments = 4;
   var faces = 6;
 
-  var tGeometry = new THREE.CylinderGeometry(1, 1, 100, faces, segments);
+  var tGeometry = new THREE.CylinderGeometry(1, 1, 50, faces, segments);
 
   tGeometry.vertices.forEach((v, i) => {
     if (i == faces * (segments + 1)) {
