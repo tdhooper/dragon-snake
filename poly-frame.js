@@ -3,7 +3,7 @@ var vec3 = require('gl-matrix').vec3;
 
 function PolyFrame(poly) {
 
-  capsule = createCapsule(.02, 4.5);
+  capsule = createCapsule(.1, 4.5);
 
   var positions = [];
   var normals = [];
@@ -34,6 +34,7 @@ function PolyFrame(poly) {
       void main() {
         gl_FragColor = vec4(vNormal * .5 + .5, 1);
         gl_FragColor = vec4(.2,.8,.5,1);
+        gl_FragColor = vec4(vec3(1.),1);
       }
     `,
 

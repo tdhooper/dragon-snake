@@ -8,7 +8,7 @@ function Environment() {
   var positions = [];
 
   var w = 19;
-  var h = 18;
+  var h = 42;
   var scaleW = 1.73;
   var scaleH = scaleW * .865;
   var offset = scaleW / 2;
@@ -38,6 +38,11 @@ function Environment() {
       varying vec3 vNormal;
       varying vec2 vUv;
       varying float vD;
+      varying vec3 viPosition;
+
+      float rand(float seed){
+        return fract(mod(seed, 1.) * 43758.5453);
+      }
 
       void main() {
         float c = .1;
@@ -47,13 +52,26 @@ function Environment() {
         vec3 col = mix(vec3(50,30,90)/255./2., vec3(1,0,2), c);
         col = vec3(c);
 
-        float ring = floor(vD * 5. - time * 2.);
-        ring = mod(ring, 5.);
+        float r = length(viPosition.xy) / 10.;
+        float rr = floor(r * 50.) / 50.;
+        float ring = floor(rand(rr) * 4. - time);
+        ring = mod(ring, 4.);
 
-        if (vUv.y == ring) {
+
+        // float ring2 = floor(vD * 5. - time * 2.);
+        // ring = mod(ring2, 4.);
+
+        if (ring > 0.) {
+          ring += 1.;
+        }
+        if (vUv.y == ring && r > .4 && abs(viPosition.y) < 2.) {
+          // col = vec3(1) * c * 5.;
           col = vec3(.2,.8,.5) * c * 5.;
         }
+        // col = vec3(1.) - col;
         // col.rg = vUv/5.;
+
+        // col = vec3(r/10.);
 
         gl_FragColor = vec4(col, 1);
       }
@@ -76,10 +94,12 @@ function Environment() {
       varying vec3 vNormal;
       varying vec2 vUv;
       varying float vD;
+      varying vec3 viPosition;
 
       void main () {
         vNormal = normal;
         vUv = uv;
+        viPosition = iPosition;
 
         vec4 pos = vec4(position.zxy, 1);
         // pos.x *= .75;
@@ -90,21 +110,21 @@ function Environment() {
         float r;
 
         r = length(pos.xy);
-        pos.xy *= mix(1., r * .2, .5);
+        pos.xy /= mix(1., r * .2, .3);
 
         r = length(pos.xy);
-        r = pow(r, .5) * 5.;
-        r = (sin(r - time * 3.) * .5 + .5);
-        r *= .2;
+        r = pow(r, .5) * 2.5;
+        r = (sin(r - time * 1.5) * .5 + .5);
+        r *= .3;
         r += 1.;
-        pos.xy *= r * 3.;
+        pos.xy *= r * 5.;
 
         float d = length(iPosition.xy);
         d = pow(d, .5);
         d = (sin(d * 30. - time * 1.) * .5 + .5);
-        d += (sin(d * 12. - time * 2.) * .5 + .5);
+        d += (sin(d * 12. - time * 2.) * .5 + .5) * .5;
         d *= .2;
-        pos.z -= d * 60.;
+        pos.z -= d * 30.;
 
         vD = d;
 
