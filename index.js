@@ -4,7 +4,7 @@ var Snake = require('./snake');
 var PolyFrame = require('./poly-frame');
 var DebugCurve = require('./debug-curve');
 var DebugPoint = require('./debug-point');
-var Environment = require('./environment');
+// var Environment = require('./environment');
 var glm = require('gl-matrix');
 var vec3 = glm.vec3;
 var quat = glm.quat;
@@ -29,7 +29,7 @@ var snake = new Snake(poly, 60, 5, 3, 1/13.3);
 var snake2 = new Snake(poly, 40, 5, 3, 1/13.3);
 var polyFrame = new PolyFrame(poly);
 var debugCurve = new DebugCurve(snake.curve);
-var environment = new Environment();
+// var environment = new Environment();
 
 var modelZ = faceVector(poly, 7);
 var modelY = faceVector(poly, 4);
@@ -56,9 +56,7 @@ var drawSetup = regl({
     view: () => {
       return camera.view();
     },
-    model: () => {
-      return model
-    }
+    model: regl.context('model')
   }
 });
 
@@ -68,10 +66,12 @@ function draw(context) {
   mat4.rotate(model, model, .005, modelX);
   // mat4.rotate(model, model, .0025, modelY);
 
+  context.model = model;
+
   drawSetup(function(context) {
     snake.draw(context);
     polyFrame.draw(context);
-    environment.draw();
+    // environment.draw();
 
     // poly.vertex.forEach((v, i) => {
     //   var id = (i / poly.vertex.length) * .75;
